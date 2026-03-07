@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Koło Fortuny</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 20px;
+            width: 85%;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .wheel-box {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 20px auto;
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+
+        #pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            z-index: 10;
+        }
+
+        .btn {
+            background: linear-gradient(to right, #3b82f6, #a855f7);
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+        
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { opacity: 0.5; }
+
+        .balance { font-size: 20px; font-weight: bold; color: #fbbf24; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎰 Koło Fortuny</h1>
+        <p>Zakręć i wygraj nagrody!</p>
+    </div>
+
+    <div class="card">
+        <div class="balance">TOKENY: <span id="val">0</span></div>
+        <div class="wheel-box">
+            <img id="pointer" src="https://i.postimg.cc/hfRwWzkj/strzalka.png">
+            <img id="wheel" src="https://i.postimg.cc/D83DkJ9G/kolo.png">
+        </div>
+        <button id="spinBtn" class="btn" onclick="spin()">ZAKRĘĆ KOŁEM!</button>
+    </div>
+
+    <p style="font-size: 12px; margin-top: 20px; opacity: 0.8;">💫 Codziennie masz szansę na darmowe obroty!</p>
+
+    <script>
+        let rot = 0;
+        let bal = 0;
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        function spin() {
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = true;
+            
+            const extra = Math.floor(Math.random() * 360) + 1800;
+            rot += extra;
+            document.getElementById('wheel').style.transform = `rotate(${rot}deg)`;
+
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+            setTimeout(() => {
+                btn.disabled = false;
+                bal += 100;
+                document.getElementById('val').innerText = bal;
+                
+                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert("Gratulacje! Wygrałeś 100 monet!");
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
