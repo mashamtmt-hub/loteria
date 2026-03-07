@@ -3,93 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Gold Lottery</title>
+    <title>Diamond Wheel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --gold: #ffd700; --gold-dark: #b8860b; --dark: #0a0a0a; --blue: #0ea5e9; }
+        :root { --blue: #0ea5e9; --dark: #020617; --card: #1e293b; --gold: #fbbf24; --red: #ef4444; }
         body { 
             background: var(--dark); color: white; font-family: 'Inter', sans-serif; 
             margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh; justify-content: center;
         }
-        
-        /* KONTENER GŁÓWNY */
         .container { 
-            background: #111; padding: 30px; border-radius: 40px; 
-            border: 2px solid var(--gold-dark); width: 100%; max-width: 380px; 
-            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 20px rgba(184, 134, 11, 0.2); text-align: center;
+            background: var(--card); padding: 30px; border-radius: 32px; 
+            border: 1px solid #334155; width: 100%; max-width: 360px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); text-align: center;
         }
-
         /* SALDO */
         .balance-card { 
-            background: linear-gradient(135deg, #222, #000); border: 2px solid var(--gold);
-            padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px;
-            margin-bottom: 30px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            background: rgba(14, 165, 233, 0.1); border: 2px solid var(--blue);
+            padding: 12px 25px; border-radius: 20px; display: inline-flex; align-items: center; gap: 10px;
+            margin-bottom: 25px;
         }
-        #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
-
-        /* ZŁOTA RAMA KOŁA */
-        .wheel-outer {
-            position: relative; width: 340px; height: 340px; margin: 20px auto;
-            border-radius: 50%; padding: 15px;
-            background: linear-gradient(145deg, #ffd700, #8b6508, #ffd700, #b8860b);
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 10px rgba(255,255,255,0.5);
-        }
-
-        /* LAMPKI (MARQUEE) */
-        .lights-container {
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            border-radius: 50%; pointer-events: none;
-        }
-        .light {
-            position: absolute; width: 8px; height: 8px; background: white;
-            border-radius: 50%; top: 50%; left: 50%; transform-origin: -160px center;
-            box-shadow: 0 0 8px white; animation: blink 1s infinite;
-        }
+        #balance { font-size: 2rem; font-weight: 900; color: var(--blue); }
 
         /* KOŁO */
+        .wheel-box { position: relative; width: 320px; height: 320px; margin: 25px auto; }
+        
+        /* Strzałka */
+        .arrow {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
+            border-top: 40px solid #ffffff; z-index: 50; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+        }
+
         #wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 4px solid #000;
+            width: 100%; height: 100%; border-radius: 50%; border: 10px solid #0f172a;
             background: conic-gradient(
-                #e11d48 0deg 60deg,    /* Czerwony */
-                #f59e0b 60deg 120deg,  /* Żółty */
-                #10b981 120deg 180deg, /* Zielony */
-                #0ea5e9 180deg 240deg, /* Niebieski */
-                #6366f1 240deg 300deg, /* Indygo */
-                #d946ef 300deg 360deg  /* Różowy */
+                #0ea5e9 0deg 60deg,    /* +1 */
+                #6366f1 60deg 120deg,  /* +5 */
+                #ec4899 120deg 180deg, /* +10 */
+                var(--red) 180deg 240deg, /* 0 */
+                var(--gold) 240deg 300deg, /* +25 */
+                #10b981 300deg 360deg  /* +2 */
             );
             transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1);
             position: relative; overflow: hidden;
         }
-
-        /* ETYKIETY - POZIOME I WYCENTROWANE */
+        
+        /* ETYKIETY - IDEALNIE MIĘDZY PROMIENIAMI */
         .label {
-            position: absolute; width: 80px; height: 40px; top: 50%; left: 50%;
-            margin-top: -20px; margin-left: -40px; pointer-events: none;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; color: white; font-size: 1.8rem;
-            text-shadow: 3px 3px 6px rgba(0,0,0,1);
-        }
-
-        /* STRZAŁKA PREMIUM */
-        .arrow {
-            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
-            width: 40px; height: 50px; z-index: 100;
-            background: linear-gradient(to bottom, #ff0000, #800000);
-            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
-            border: 2px solid var(--gold); filter: drop-shadow(0 4px 10px black);
+            position: absolute; 
+            width: 50%; /* Długość promienia */
+            height: 60px; 
+            top: calc(50% - 30px); 
+            left: 50%;
+            transform-origin: left center; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* To ustawia napis na środku długości promienia */
+            padding-left: 50px; /* Korekta, by napis był w najszerszym miejscu pola */
+            box-sizing: border-box;
+            font-weight: 900; 
+            color: white; 
+            font-size: 1.6rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            pointer-events: none;
         }
 
         .wheel-center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 70px; height: 70px; background: radial-gradient(circle, #333, #000);
-            z-index: 50; border: 5px solid var(--gold); border-radius: 50%;
-            box-shadow: 0 0 20px black;
+            width: 60px; height: 60px; background: #0f172a; border-radius: 50%;
+            z-index: 40; border: 4px solid white; display: flex; align-items: center; justify-content: center;
         }
 
-        /* PRZYCISK VEGAS */
         button {
-            background: linear-gradient(180deg, var(--gold), var(--gold-dark)); 
-            color: black; border: none; padding: 22px; border-radius: 20px; 
-            font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; 
+            border: none; padding: 20px; border-radius: 20px; font-weight: 800; 
+            width: 100%; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+            margin-top: 15px; box-shadow: 0 8px 0 #1d4ed8;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 4px 0 #1d4ed8; }
+        button:disabled { background: #334155; color: #64748b; box-shadow: none; transform: translateY(4px); opacity: 0.6; }
+
+        #status { font-weight: 900; margin: 15px 0; min-height: 1.6em; color: var(--gold); font-size: 1.4rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="balance-card">
+            <span id="balance">0</span> <span>💎</span>
+        </div>
+
+        <div class="wheel-box">
+            <div class="arrow"></div>
+            <div class="wheel-center">💎</div>
+            <div id="wheel">
+                <div class="label" style="transform: rotate(30deg)">+1</div>
+                <div class="label" style="transform: rotate(90deg)">+5</div>
+                <div class="label" style="transform: rotate(150deg)">+10</div>
+                <div class="label" style="transform: rotate(210deg)">0</div>
+                <div class="label" style="transform: rotate(270deg)">+25</div>
+                <div class="label" style="transform: rotate(330deg)">+2</div>
+            </div>
+        </div>
+
+        <div id="status">GOTOWY?</div>
+        
+        <button id="spin-btn" onclick="startSpin()" disabled>ZAKRĘĆ ZA 2 💎</button>
+        <div style="margin-top:12px; font-size:0.8rem; color:#94a3b8;">KOSZT: 2 DIAMENTY</div>
+    </div>
+
+    <script>
+        const S_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
+        const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
+        
+        const sb = supabase.createClient(S_URL, S_KEY);
+        const tg = window.Telegram.WebApp;
+        const spinCost = 2;
+
+        let userBalance = 0;
+        const userId = tg.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "8461677673";
+
+        async function sync() {
+            try {
+                tg.ready(); tg.expand();
+                let { data } = await sb.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+                if (!data) {
+                    const { data: n } = await sb.from('profiles').insert([{ user_id: userId, balance: 10 }]).select().single();
+                    data = n;
+                }
+                userBalance = data.balance || 0;
+                document.getElementById('balance').innerText = userBalance;
+                document.getElementById('spin-btn').disabled = (userBalance < spinCost);
+            } catch (e) { console.error(e); }
+        }
+
+        async function startSpin() {
+            if (userBalance < spinCost) return;
+            const btn = document.getElementById('spin-btn');
+            btn.disabled = true;
+            document.getElementById('status').innerText = "KRĘCIMY...";
+
+            const prizes = [1, 5, 10, 0, 25, 2];
+            const winIdx = Math.floor(Math.random() * prizes.length);
+            const winValue = prizes[winIdx];
+
+            userBalance -= spinCost;
+            await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
+            document.getElementById('balance').innerText = userBalance;
+
+            // MATEMATYKA: Obracamy tak, by środek wybranego segmentu (winIdx * 60 + 30) był na górze (0 stopni)
+            const targetRotation = (360 - (winIdx * 60 + 30));
+            const totalRotation = 3600 + targetRotation; 
+
+            document.getElementById('wheel').style.transform = `rotate(${totalRotation}deg)`;
+
+            setTimeout(async () => {
+                userBalance += winValue;
+                await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
+                document.getElementById('balance').innerText = userBalance;
+                document.getElementById('status').innerText = winValue > 0 ? `WYGRANA: +${winValue} 💎` : "PECH! 0 💎";
+                btn.disabled = (userBalance < spinCost);
+            }, 4100);
+        }
+
+        sync();
+    </script>
+</body>
+</html>
