@@ -25,53 +25,52 @@
         }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--blue); }
 
-        .wheel-box { position: relative; width: 330px; height: 330px; margin: 25px auto; }
+        .wheel-box { position: relative; width: 340px; height: 340px; margin: 25px auto; }
         
         .arrow {
-            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
-            border-top: 45px solid #ffffff; z-index: 50; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+            border-top: 45px solid #ffffff; z-index: 100; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
         }
 
         #wheel {
             width: 100%; height: 100%; border-radius: 50%; border: 12px solid #0f172a;
             background: conic-gradient(
-                #0ea5e9 0deg 60deg,    /* +1 (Index 0) */
-                #6366f1 60deg 120deg,  /* +5 (Index 1) */
-                #ec4899 120deg 180deg, /* +10 (Index 2) */
-                var(--red) 180deg 240deg, /* 0 (Index 3) */
-                var(--gold) 240deg 300deg, /* +25 (Index 4) */
-                #10b981 300deg 360deg  /* +2 (Index 5) */
+                #0ea5e9 0deg 60deg,    /* +1  */
+                #6366f1 60deg 120deg,  /* +5  */
+                #ec4899 120deg 180deg, /* +10 */
+                var(--red) 180deg 240deg, /* 0   */
+                var(--gold) 240deg 300deg, /* +25 */
+                #10b981 300deg 360deg  /* +2  */
             );
             transition: transform 4s cubic-bezier(0.15, 0, 0.1, 1);
             position: relative; overflow: hidden;
         }
         
-        /* POPRAWIONE NAPISY - WYCENTROWANE W POLU */
+        /* ETYKIETY - IDEALNIE WYCENTROWANE W SEGMENCIE */
         .label {
             position: absolute; 
-            width: 50%; 
+            width: 50%; /* Od środka do krawędzi */
             height: 60px; 
             top: calc(50% - 30px); 
             left: 50%;
             transform-origin: left center; 
             display: flex; 
             align-items: center; 
-            justify-content: flex-end; /* Przesuwa tekst do zewnętrznej części */
-            padding-right: 45px; /* Odstęp od krawędzi koła, by trafić w środek pola */
+            justify-content: center; /* Centruje wzdłuż promienia */
+            padding-left: 45px; /* Odsuwa od ciasnego środka koła */
             box-sizing: border-box;
             font-weight: 900; 
             color: white; 
-            font-size: 1.7rem;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            font-size: 1.8rem; /* Jeszcze większe i czytelniejsze */
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
             pointer-events: none;
         }
 
         .wheel-center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 65px; height: 65px; background: #0f172a; border-radius: 50%;
-            z-index: 35; border: 4px solid white; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
+            width: 60px; height: 60px; background: #0f172a; border-radius: 50%;
+            z-index: 50; border: 4px solid white; display: flex; align-items: center; justify-content: center;
         }
 
         button {
@@ -81,7 +80,6 @@
             margin-top: 15px; box-shadow: 0 8px 0 #1d4ed8; text-transform: uppercase;
         }
         button:disabled { background: #334155; color: #64748b; box-shadow: none; transform: translateY(4px); opacity: 0.6; }
-        button:active { transform: translateY(2px); box-shadow: 0 4px 0 #1d4ed8; }
 
         #status { font-weight: 900; margin: 15px 0; min-height: 1.6em; color: var(--gold); font-size: 1.4rem; text-transform: uppercase; }
     </style>
@@ -148,13 +146,15 @@
             const winIndex = Math.floor(Math.random() * prizes.length);
             const winValue = prizes[winIndex];
 
+            // Pobranie i odjęcie kosztu
             userBalance -= spinCost;
             await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
             document.getElementById('balance').innerText = userBalance;
 
-            // OBLICZENIA OBROTU - IDEALNE CENTROWANIE
-            const targetRotation = (360 - (winIndex * 60 + 30));
-            const totalRotation = 3600 + targetRotation; 
+            // OBLICZENIA OBROTU
+            // Celujemy tak, by środek segmentu (winIndex * 60 + 30) był na górze (0 stopni)
+            const targetAngle = (winIndex * 60) + 30;
+            const totalRotation = 3600 + (360 - targetAngle); 
 
             document.getElementById('wheel').style.transform = `rotate(${totalRotation}deg)`;
 
@@ -167,16 +167,4 @@
                 if (winValue === 25) {
                     document.getElementById('status').innerText = "🔥 JACKPOT +25! 🔥";
                 } else if (winValue > 0) {
-                    document.getElementById('status').innerText = `WYGRANA: +${winValue} 💎`;
-                } else {
-                    document.getElementById('status').innerText = "PECH! 0 💎";
-                }
-                
-                btn.disabled = (userBalance < spinCost);
-            }, 4000);
-        }
-
-            sync();
-    </script>
-</body>
-</html>
+                    document.getElementById('status').innerText =
