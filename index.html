@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Gold Casino Fix</title>
+    <title>Diamond Gold Casino Sound Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -45,14 +45,14 @@
         const sb = supabase.createClient(S_URL, S_KEY);
         const tg = window.Telegram.WebApp;
         
+        // DŹWIĘKI
         const spinSound = new Audio('https://www.soundjay.com/misc/sounds/fidget-spinner-1.mp3');
         const winSound = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
         const lossSound = new Audio('https://www.soundjay.com/misc/sounds/fail-trombone-01.mp3');
 
         const prizes = [0, 25, 2, 1, 5, 10]; 
         const wheel = document.getElementById('wheel');
-        let currentRotation = 0; // ZMIENNA PAMIĘTAJĄCA OBRÓT
-
+        
         prizes.forEach((val, i) => {
             const angle = i * 60 + 30;
             const dist = 105;
@@ -93,5 +93,49 @@
         async function startSpin() {
             if (bal < 2) return;
             const btn = document.getElementById('spin-btn');
-            btn.disabled = true; // BLOKADA PRZYCISKU
+            btn.disabled = true;
             document.getElementById('status').innerText = "POWODZENIA!";
+
+            // START DŹWIĘKU KRĘCENIA
+            spinSound.currentTime = 0;
+            spinSound.play();
+
+            const winIdx = Math.floor(Math.random() * prizes.length);
+            const winVal = prizes[winIdx];
+
+            bal -= 2;
+            await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
+            document.getElementById('balance').innerText = bal;
+
+            const extraSpins = 7200; 
+            const targetRotation = (360 - (winIdx * 60 + 30));
+            const totalRotation = extraSpins + targetRotation;
+
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+
+            setTimeout(async () => {
+                // STOP DŹWIĘKU KRĘCENIA
+                spinSound.pause();
+                
+                bal += winVal;
+                await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
+                document.getElementById('balance').innerText = bal;
+
+                if (winVal > 0) {
+                    winSound.currentTime = 0;
+                    winSound.play();
+                    document.getElementById('status').innerText = `WYGRANA: +${winVal} 💎`;
+                } else {
+                    lossSound.currentTime = 0;
+                    lossSound.play();
+                    document.getElementById('status').innerText = "BRAK WYGRANEJ!";
+                }
+                
+                btn.disabled = (bal < 2);
+            }, 5100);
+        }
+
+        init();
+    </script>
+</body>
+</html>
