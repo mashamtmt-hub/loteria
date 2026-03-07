@@ -19,14 +19,15 @@ app.post("/create-stars-invoice", async (req, res) => {
   console.log(`📥 Otrzymano prośbę o fakturę: User ${userId}, Ilość: ${amount}`);
 
   try {
-    const link = await bot.telegram.createInvoiceLink(
-      `Pakiet ${amount} Diamentów`,
-      `Doładowanie salda 1:1 w Diamond Casino`,
-      `user_${userId}_pay_${Date.now()}`,
-      "", 
-      "XTR", // Telegram Stars
-      [{ label: "Diamenty", amount: amount }]
-    );
+    // KLUCZOWA ZMIANA: Przekazujemy jeden obiekt {} zamiast wielu argumentów
+    const link = await bot.telegram.createInvoiceLink({
+      title: `Pakiet ${amount} Diamentów`,
+      description: `Doładowanie salda 1:1 w Diamond Casino`,
+      payload: `user_${userId}_pay_${Date.now()}`,
+      provider_token: "", // Puste dla Stars
+      currency: "XTR",    // Waluta Stars
+      prices: [{ label: "Diamenty", amount: parseInt(amount) }]
+    });
     
     console.log("✅ Faktura wygenerowana pomyślnie");
     res.json({ link });
