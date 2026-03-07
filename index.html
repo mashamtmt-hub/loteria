@@ -53,6 +53,9 @@
         const prizes = [0, 25, 2, 1, 5, 10]; 
         const wheel = document.getElementById('wheel');
         
+        // KLUCZOWA ZMIENNA: PAMIĘTA AKTUALNY OBRÓT
+        let currentRotation = 0;
+
         prizes.forEach((val, i) => {
             const angle = i * 60 + 30;
             const dist = 105;
@@ -96,7 +99,6 @@
             btn.disabled = true;
             document.getElementById('status').innerText = "POWODZENIA!";
 
-            // START DŹWIĘKU KRĘCENIA
             spinSound.currentTime = 0;
             spinSound.play();
 
@@ -107,30 +109,29 @@
             await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
             document.getElementById('balance').innerText = bal;
 
-            const extraSpins = 7200; 
-            const targetRotation = (360 - (winIdx * 60 + 30));
-            const totalRotation = extraSpins + targetRotation;
+            // NOWA LOGIKA MATEMATYCZNA:
+            const extraSpins = 7200; // 20 pełnych obrotów
+            const targetOffset = (360 - (winIdx * 60 + 30)); // Kąt nagrody
+            
+            // Wyrównujemy do pełnego koła, a potem dodajemy dystans do nagrody
+            const resetToFullCircle = 360 - (currentRotation % 360);
+            currentRotation += extraSpins + resetToFullCircle + targetOffset;
 
-            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(async () => {
-                // STOP DŹWIĘKU KRĘCENIA
                 spinSound.pause();
-                
                 bal += winVal;
                 await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
                 document.getElementById('balance').innerText = bal;
 
                 if (winVal > 0) {
-                    winSound.currentTime = 0;
-                    winSound.play();
+                    winSound.currentTime = 0; winSound.play();
                     document.getElementById('status').innerText = `WYGRANA: +${winVal} 💎`;
                 } else {
-                    lossSound.currentTime = 0;
-                    lossSound.play();
+                    lossSound.currentTime = 0; lossSound.play();
                     document.getElementById('status').innerText = "BRAK WYGRANEJ!";
                 }
-                
                 btn.disabled = (bal < 2);
             }, 5100);
         }
