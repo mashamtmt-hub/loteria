@@ -126,66 +126,62 @@
 
         // --- LOGIKA LOSOWANIA I PROCENTÓW ---
         async function startSpin() {
-            if (userSpins <= 0) return;
+    // 1. Sprawdzamy, czy gracz ma spiny ZANIM zaczniemy
+    if (userSpins <= 0) {
+        alert("Brak spinów! Kup je u bota.");
+        return;
+    }
 
-            // Blokujemy przycisk na czas kręcenia
-            document.getElementById('spin-button').disabled = true;
-            document.getElementById('status').innerText = "Losowanie...";
-            
-            // 1. Odejmujemy 1 spin w bazie danych
-            const { error } = await supabase
-                .from('profiles')
-                .update({ spins: userSpins - 1 })
-                .eq('user_id', userId);
+    document.getElementById('spin-button').disabled = true;
+    
+    // 2. Odejmujemy 1 spin w bazie danych (TO MUSI SIĘ UDAĆ)
+    const { error: spinError } = await supabase
+        .from('profiles')
+        .update({ spins: userSpins - 1 })
+        .eq('user_id', userId);
 
-            if (error) {
-                alert("Błąd połączenia z bazą!");
-                document.getElementById('spin-button').disabled = false;
-                return;
-            }
+    if (spinError) {
+        console.error("Błąd bazy:", spinError);
+        alert("Baza nie pozwoliła zabrać spina. Wykonaj Krok 1 (SQL)!");
+        document.getElementById('spin-button').disabled = false;
+        return;
+    }
 
-            // 2. Animacja kręcenia (losowy obrót + 10 pełnych obrotów)
-            const randomDegree = Math.floor(Math.random() * 360) + 3600;
-            const wheel = document.getElementById('wheel');
-            wheel.style.transform = `rotate(${randomDegree}deg)`;
+    // 3. Animacja koła
+    const randomDegree = Math.floor(Math.random() * 360) + 3600;
+    document.getElementById('wheel').style.transform = `rotate(${randomDegree}deg)`;
 
-            // 3. Logika nagród wg Twoich szans
-            setTimeout(async () => {
-                let prize = 0;
-                const chance = Math.random() * 100;
+    // 4. Losowanie nagrody (Prawdziwe procenty!)
+    setTimeout(async () => {
+        let prize = 0;
+        const chance = Math.random() * 100;
 
-                if (chance < 70) { 
-                    // 70% szans: 1-5 diamentów
-                    prize = Math.floor(Math.random() * 5) + 1;
-                    document.getElementById('status').innerHTML = `Wygrana: <span style="color:#00d2ff">${prize} diamentów!</span> 💎`;
-                } else if (chance < 90) { 
-                    // 20% szans: 10-25 diamentów
-                    prize = Math.floor(Math.random() * 15) + 10;
-                    document.getElementById('status').innerHTML = `Super! <span style="color:#00ff88">${prize} diamentów!</span> 💎💎`;
-                } else if (chance < 99) { 
-                    // 9% szans: 50 diamentów
-                    prize = 50;
-                    document.getElementById('status').innerHTML = `🏆 WIELKA WYGRANA: <span style="color:#ffcc00">${prize} diamentów!</span>`;
-                } else { 
-                    // 1% szans: JACKPOT!
-                    prize = 250;
-                    document.getElementById('status').innerHTML = `🔥 <span style="color:#ff0044">JACKPOT: ${prize} DIAMENTÓW!</span> 🔥`;
-                }
-
-                // 4. Aktualizacja salda (balance) w bazie danych
-                const { error: upError } = await supabase
-                    .from('profiles')
-                    .update({ balance: userBalance + prize })
-                    .eq('user_id', userId);
-
-                // 5. Odśwież dane na ekranie
-                loadUserData();
-                
-            }, 4000); // Czekamy 4 sekundy na koniec animacji
+        if (chance < 70) { 
+            prize = Math.floor(Math.random() * 5) + 1; // 1-5 diamentów
+        } else if (chance < 90) { 
+            prize = Math.floor(Math.random() * 15) + 10; // 10-25 diamentów
+        } else if (chance < 99) { 
+            prize = 50; 
+        } else { 
+            prize = 250; // JACKPOT
         }
+
+        document.getElementById('status').innerHTML = `Wygrałeś: ${prize} 💎`;
+
+        // 5. Zapisujemy wygraną do salda w bazie
+        await supabase
+            .from('profiles')
+            .update({ balance: userBalance + prize })
+            .eq('user_id', userId);
+
+        // 6. Odświeżamy dane na ekranie (licznik się zaktualizuje)
+        loadUserData();
+    }, 4000);
+}
 
         // Inicjalizacja przy starcie strony
         loadUserData();
     </script>
 </body>
 </html>
+
