@@ -3,146 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Gold Casino Premium</title>
+    <title>Diamond Gold Casino Fix</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #ffd700; --gold-dark: #8b6508; --dark: #070a0f; }
-        body { 
-            background: var(--dark); color: white; font-family: 'Inter', sans-serif; 
-            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; justify-content: center;
-        }
-
-        /* SALDO */
-        .balance-card { 
-            background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--gold);
-            padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px;
-            margin-bottom: 30px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
-        }
+        body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; }
+        .balance-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--gold); padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 30px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
-
-        /* ZŁOTA RAMA - FIX DLA IDEALNEGO WYCENTROWANIA */
-        .wheel-outer {
-            position: relative; 
-            width: 350px; 
-            height: 350px; 
-            margin: 20px auto;
-            border-radius: 50%; 
-            
-            /* USUNIĘTO PADDING, WPROWADZONO FLEXBOX DLA PRECYZJI */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            /* ZMIANA NA GRADIENT RADIALNY (KOLISTY) DLA LEPSZEGO EFEKTU 3D */
-            background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%);
-            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5);
-        }
-
-        .lights-container {
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            border-radius: 50%; pointer-events: none;
-        }
-        .light {
-            position: absolute; width: 10px; height: 10px; background: white;
-            border-radius: 50%; top: 5px; left: calc(50% - 5px);
-            transform-origin: 50% 170px; /* Obrót wokół środka koła 350px */
-            box-shadow: 0 0 12px white;
-            animation: blink 1s infinite;
-        }
-
-        /* KOŁO Z KOLORAMI - FIX ROZMIARU DLA ZŁOTEJ RAMY */
-        #wheel {
-            /* Średnica zewnętrzna (350px) - szerokość ramy (18px * 2) = 314px */
-            width: 314px; 
-            height: 314px;
-            border-radius: 50%; border: 6px solid #000;
-            background: conic-gradient(
-                #10b981 0deg 60deg,    /* 0 (Green) */
-                #0ea5e9 60deg 120deg,  /* +25 (Blue) */
-                #6366f1 120deg 180deg, /* +2 (Purple) */
-                #d946ef 180deg 240deg, /* +1 (Pink) */
-                #ef4444 240deg 300deg, /* +5 (Red) */
-                #fbbf24 300deg 360deg  /* +10 (Orange) */
-            );
-            transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1);
-            position: relative; overflow: hidden;
-        }
-
-        /* LICZBY - IDEALNIE WYCENTROWANE I POZIOME */
-        .label {
-            position: absolute; width: 80px; height: 40px; top: 50%; left: 50%;
-            margin-top: -20px; margin-left: -40px; pointer-events: none;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; color: white; font-size: 2.2rem;
-            text-shadow: 3px 3px 10px rgba(0,0,0,1);
-        }
-
-        /* BIAŁA STRZAŁKA */
-        .arrow {
-            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent;
-            border-top: 45px solid #ffffff; z-index: 100; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
-        }
-
-        .wheel-center {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 65px; height: 65px; background: radial-gradient(circle, #333, #000);
-            z-index: 50; border: 4px solid var(--gold); border-radius: 50%;
-            box-shadow: 0 0 20px black; display: flex; align-items: center; justify-content: center;
-        }
-
-        button {
-            background: linear-gradient(180deg, var(--gold), #b8860b); 
-            color: black; border: none; padding: 22px; border-radius: 25px; 
-            font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer; 
-            transition: 0.2s; margin-top: 25px; text-transform: uppercase;
-            box-shadow: 0 8px 0 #785a06;
-        }
+        .wheel-outer { position: relative; width: 350px; height: 350px; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%); box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5); }
+        .lights-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
+        .light { position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; top: 5px; left: calc(50% - 5px); transform-origin: 50% 170px; box-shadow: 0 0 12px white; animation: blink 0.8s infinite; }
+        #wheel { width: 314px; height: 314px; border-radius: 50%; border: 6px solid #000; background: conic-gradient(#10b981 0deg 60deg, #0ea5e9 60deg 120deg, #6366f1 120deg 180deg, #d946ef 180deg 240deg, #ef4444 240deg 300deg, #fbbf24 300deg 360deg); transition: transform 5s cubic-bezier(0.15, 0, 0.1, 1); position: relative; overflow: hidden; }
+        .label { position: absolute; width: 80px; height: 40px; top: 50%; left: 50%; margin-top: -20px; margin-left: -40px; pointer-events: none; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 2.2rem; text-shadow: 3px 3px 10px rgba(0,0,0,1); }
+        .arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent; border-top: 45px solid #ffffff; z-index: 100; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 65px; height: 65px; background: radial-gradient(circle, #333, #000); z-index: 50; border: 4px solid var(--gold); border-radius: 50%; box-shadow: 0 0 20px black; display: flex; align-items: center; justify-content: center; }
+        button { background: linear-gradient(180deg, var(--gold), #b8860b); color: black; border: none; padding: 22px; border-radius: 25px; font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer; transition: 0.2s; margin-top: 25px; text-transform: uppercase; box-shadow: 0 8px 0 #785a06; }
         button:active { transform: translateY(4px); box-shadow: 0 4px 0 #785a06; }
         button:disabled { background: #333; color: #555; box-shadow: none; transform: translateY(8px); }
-
         #status { font-weight: 900; margin: 20px 0; color: var(--gold); font-size: 1.5rem; text-transform: uppercase; }
-
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="balance-card">
-            <span id="balance">0</span> <span>💎</span>
-        </div>
-
+    <div class="container" style="text-align: center;">
+        <div class="balance-card"><span id="balance">0</span> <span>💎</span></div>
         <div class="wheel-outer">
             <div class="arrow"></div>
             <div class="lights-container" id="lights"></div>
             <div class="wheel-center">💎</div>
             <div id="wheel"></div>
         </div>
-
-        <div id="status">ZAKRĘĆ I WYGRAJ!</div>
-        <button id="spin-btn" onclick="startSpin()" disabled>ZAKRĘĆ ZA 2 💎</button>
+        <div id="status">ZAKRĘĆ ZA 2 💎</div>
+        <button id="spin-btn" onclick="startSpin()" disabled>START!</button>
     </div>
 
     <script>
         const S_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
         const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
-        
         const sb = supabase.createClient(S_URL, S_KEY);
         const tg = window.Telegram.WebApp;
         
+        const spinSound = new Audio('https://www.soundjay.com/misc/sounds/fidget-spinner-1.mp3');
+        const winSound = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
+        const lossSound = new Audio('https://www.soundjay.com/misc/sounds/fail-trombone-01.mp3');
+
         const prizes = [0, 25, 2, 1, 5, 10]; 
         const wheel = document.getElementById('wheel');
-        
-        // POZYCJONOWANIE LICZB (W masie segmentu 314px)
+        let currentRotation = 0; // ZMIENNA PAMIĘTAJĄCA OBRÓT
+
         prizes.forEach((val, i) => {
             const angle = i * 60 + 30;
-            const dist = 105; // Odległość od środka koła (idealny środek pola)
+            const dist = 105;
             const x = dist * Math.cos((angle - 90) * Math.PI / 180);
             const y = dist * Math.sin((angle - 90) * Math.PI / 180);
-            
             const div = document.createElement('div');
             div.className = 'label';
             div.style.left = `calc(50% + ${x}px)`;
@@ -151,7 +66,6 @@
             wheel.appendChild(div);
         });
 
-        // GENERACJA LAMPK
         const lights = document.getElementById('lights');
         for(let i=0; i<24; i++) {
             const l = document.createElement('div');
@@ -179,30 +93,5 @@
         async function startSpin() {
             if (bal < 2) return;
             const btn = document.getElementById('spin-btn');
-            btn.disabled = true;
-            document.getElementById('status').innerText = "LOSOWANIE...";
-
-            const winIdx = Math.floor(Math.random() * prizes.length);
-            const winVal = prizes[winIdx];
-
-            bal -= 2;
-            await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
-            document.getElementById('balance').innerText = bal;
-
-            // MATEMATYKA OBROTU
-            const rotation = 3600 + (360 - (winIdx * 60 + 30));
-            wheel.style.transform = `rotate(${rotation}deg)`;
-
-            setTimeout(async () => {
-                bal += winVal;
-                await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
-                document.getElementById('balance').innerText = bal;
-                document.getElementById('status').innerText = winVal > 0 ? `WYGRANA: +${winVal} 💎` : "PECH! 0 💎";
-                btn.disabled = (bal < 2);
-            }, 4100);
-        }
-
-        init();
-    </script>
-</body>
-</html>
+            btn.disabled = true; // BLOKADA PRZYCISKU
+            document.getElementById('status').innerText = "POWODZENIA!";
