@@ -10,75 +10,81 @@ app.use(express.json());
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY,
+  process.env.SUPABASE_KEY
 );
 
-// --- KLUCZOWA ZMIANA: REJESTRACJA PRZY /START ---
+// --- 1. ENDPOINT DLA TWOJEGO KOŁA FORTUNY (WEB APP) ---
+// Ta część pozwala Twojej stronie na GitHubie poprosić o link do płatności Stars
+app.post("/create-stars-invoice", async (req, res) => {
+  const { userId, amount } = req.body;
+
+  try {
+    // Generowanie specjalnego linku do faktury Telegram Stars
+    const link = await bot.telegram.createInvoiceLink(
+      `Pakiet ${amount} Diamentów`,
+      `Doładowanie salda 1:1 w Diamond Casino`,
+      `user_${userId}_pay_${Date.now()}`,
+      "", // Provider token - pusty dla Stars (XTR)
+      "XTR", // Waluta: Telegram Stars
+      [{ label: "Diamenty", amount: amount }]
+    );
+    
+    res.json({ link });
+  } catch (e) {
+    console.error("Błąd tworzenia faktury:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// --- 2. LOGIKA PRZYCISKU /START ---
 bot.start(async (ctx) => {
   const userId = ctx.from.id.toString();
   const userName = ctx.from.first_name || "Gracz";
 
   try {
-    // Sprawdzamy, czy gracz już istnieje
     let { data: profile } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
 
-    // Jeśli nie istnieje, tworzymy go OD RAZU
     if (!profile) {
       await supabase
         .from("profiles")
-        .insert([{ user_id: userId, balance: 0, spins: 0 }]); // Dajemy 0 spinów na start
-      console.log(`Stworzono nowy profil dla: ${userId}`);
+        .insert([{ user_id: userId, balance: 10, spins: 0 }]); // 10 diamentów na start
     }
 
     ctx.reply(
-      `🎰 Witaj ${userName} w Loterii Diamentów!\n\nTwój profil jest gotowy. Kupuj zakręcenia gwiazdkami i wygrywaj wirtualne diamenty!`,
+      `🎰 Witaj ${userName}!\n\nZasada jest prosta: 1 Gwiazdka (Stars) = 1 Diament 💎.\nUżywaj diamentów, aby kręcić kołem i wygrywać więcej!`,
       {
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: "⭐️ Kup 1 Zakręcenie (5 ⭐)",
-                callback_data: "buy_spin",
-              },
-            ],
-            [
-              {
-                text: "🎮 Otwórz Koło Fortuny",
+                text: "🎮 ZAGRAJ TERAZ",
                 web_app: { url: "https://mashamtmt-hub.github.io/loteria/" },
               },
             ],
           ],
         },
-      },
+      }
     );
   } catch (err) {
     console.error("Błąd przy /start:", err);
-    ctx.reply("Wystąpił problem przy ładowaniu profilu. Spróbuj za chwilę!");
   }
 });
 
-bot.action("buy_spin", (ctx) => {
-  ctx.replyWithInvoice({
-    title: "Zakręcenie Kołem",
-    description: "Kupujesz 1 szansę na wygraną w naszej grze.",
-    payload: "spin_1",
-    provider_token: "", // Puste dla Telegram Stars
-    currency: "XTR",
-    prices: [{ label: "1x Spin", amount: 5 }],
-  });
-  ctx.answerCbQuery();
-});
+// --- 3. OBSŁUGA PŁATNOŚCI (STARS) ---
 
+// Potwierdzenie gotowości do transakcji
 bot.on("pre_checkout_query", (ctx) => ctx.answerPreCheckoutQuery(true));
 
+// Co się dzieje po udanym zakupie
 bot.on("successful_payment", async (ctx) => {
   const userId = ctx.from.id.toString();
+  const amount = ctx.message.successful_payment.total_amount; // Ilość zapłaconych Stars
+
   try {
-    // Pobieramy aktualny stan profilu
     let { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -86,21 +92,26 @@ bot.on("successful_payment", async (ctx) => {
       .single();
 
     if (profile) {
+      // Dodajemy diamenty 1:1 do salda
+      const newBalance = (profile.balance || 0) + amount;
+      
       await supabase
         .from("profiles")
-        .update({ spins: (profile.spins || 0) + 1 })
+        .update({ balance: newBalance })
         .eq("user_id", userId);
       
-      ctx.reply("✅ Płatność udana! Otrzymałeś 1 zakręcenie. Powodzenia! 🍀");
+      ctx.reply(`✅ Sukces! Doładowano ${amount} 💎. Twoje nowe saldo to ${newBalance}. Powodzenia!`);
     }
   } catch (err) {
     console.error("Błąd po płatności:", err);
-    ctx.reply("Błąd zapisu spinów. Napisz do administracji!");
+    ctx.reply("Wystąpił błąd przy aktualizacji salda diamentów.");
   }
 });
 
-app.get("/", (req, res) => res.send("Serwer bota działa!"));
+app.get("/", (req, res) => res.send("Serwer bota i płatności Stars działa!"));
 
-app.listen(3000, () => console.log("Serwer HTTP na porcie 3000"));
+// Render automatycznie przypisuje port, więc lepiej użyć process.env.PORT
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Serwer HTTP na porcie ${PORT}`));
 
-bot.launch().then(() => console.log("Bot na Telegramie podłączony! 🚀"));
+bot.launch().then(() => console.log("Bot kasjera Stars podłączony! 🚀"));
