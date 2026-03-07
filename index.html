@@ -25,14 +25,13 @@
         }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--blue); }
 
-        /* KOŁO FORTUNY */
-        .wheel-box { position: relative; width: 320px; height: 320px; margin: 25px auto; }
+        .wheel-box { position: relative; width: 330px; height: 330px; margin: 25px auto; }
         
-        /* Strzałka na samej górze */
+        /* Strzałka na górze */
         .arrow {
-            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
-            border-top: 40px solid #ffffff; z-index: 30; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+            border-top: 45px solid #ffffff; z-index: 40; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
         }
 
         #wheel {
@@ -49,22 +48,30 @@
             position: relative; overflow: hidden;
         }
         
-        /* Napisy na segmentach - przesunięte do środka */
+        /* Napisy - teraz wycentrowane w środku segmentów */
         .label {
-            position: absolute; width: 50%; height: 60px; top: calc(50% - 30px); left: 50%;
-            transform-origin: left center; font-weight: 900; text-align: center; 
-            pointer-events: none; color: white; font-size: 1.5rem;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
-            display: flex; align-items: center; justify-content: center;
-            /* To przesuwa tekst w głąb segmentu, a nie na brzeg */
-            padding-left: 60px; 
+            position: absolute; 
+            width: 50%; /* Długość od środka do brzegu */
+            height: 60px; 
+            top: calc(50% - 30px); 
+            left: 50%;
+            transform-origin: left center; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* Centrowanie w poziomie segmentu */
+            padding-left: 40px; /* Przesunięcie od samego środka koła w głąb pola */
+            font-weight: 900; 
+            color: white; 
+            font-size: 1.6rem;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+            pointer-events: none;
         }
 
         .wheel-center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 60px; height: 60px; background: #0f172a; border-radius: 50%;
-            z-index: 25; border: 4px solid white; display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            width: 65px; height: 65px; background: #0f172a; border-radius: 50%;
+            z-index: 35; border: 4px solid white; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; box-shadow: 0 0 20px rgba(0,0,0,0.6);
         }
 
         button {
@@ -137,21 +144,20 @@
             btn.disabled = true;
             document.getElementById('status').innerText = "LOSOWANIE...";
 
-            // 1. Losujemy nagrodę (indeksy: 0=+1, 1=+5, 2=+10, 3=0, 4=+25, 5=+2)
             const prizes = [1, 5, 10, 0, 25, 2];
             const winIndex = Math.floor(Math.random() * prizes.length);
             const winValue = prizes[winIndex];
 
-            // 2. Pobierz aktualne saldo z bazy przed odjęciem (bezpieczeństwo)
+            // Odjęcie kosztu
             userBalance -= spinCost;
             await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
             document.getElementById('balance').innerText = userBalance;
 
-            // 3. OBLICZENIA OBROTU (Naprawione 90 stopni i centrowanie)
-            // Każdy segment ma 60 stopni. Środek i-tego segmentu to (i * 60 + 30).
-            // Aby segment i znalazł się na górze (0 stopni), musimy obrócić koło o: 360 - (i * 60 + 30).
+            // OBLICZENIA OBROTU
+            // Każdy segment ma 60 stopni. Środek segmentu i to (i * 60 + 30).
+            // Aby segment trafił pod strzałkę na górze, obracamy o: 360 - (i * 60 + 30).
             const targetRotation = (360 - (winIndex * 60 + 30));
-            const totalRotation = 3600 + targetRotation; // 10 pełnych obrotów + cel
+            const totalRotation = 3600 + targetRotation; 
 
             document.getElementById('wheel').style.transform = `rotate(${totalRotation}deg)`;
 
