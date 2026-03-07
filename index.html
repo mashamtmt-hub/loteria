@@ -3,89 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Wheel</title>
+    <title>Diamond Gold Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --blue: #0ea5e9; --dark: #020617; --card: #1e293b; --gold: #fbbf24; --red: #ef4444; }
+        :root { --gold: #ffd700; --gold-dark: #8b6508; --dark: #070a0f; }
         body { 
             background: var(--dark); color: white; font-family: 'Inter', sans-serif; 
             margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh; justify-content: center;
         }
-        .container { 
-            background: var(--card); padding: 30px; border-radius: 32px; 
-            border: 1px solid #334155; width: 100%; max-width: 360px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); text-align: center;
-        }
+
         /* SALDO */
         .balance-card { 
-            background: rgba(14, 165, 233, 0.1); border: 2px solid var(--blue);
-            padding: 12px 25px; border-radius: 20px; display: inline-flex; align-items: center; gap: 10px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--gold);
+            padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px;
+            margin-bottom: 30px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
         }
-        #balance { font-size: 2rem; font-weight: 900; color: var(--blue); }
+        #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
 
-        /* KOŁO */
-        .wheel-box { position: relative; width: 320px; height: 320px; margin: 25px auto; }
-        
-        /* Strzałka */
-        .arrow {
-            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
-            border-top: 40px solid #ffffff; z-index: 50; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+        /* ZŁOTA RAMA I LAMPKI */
+        .wheel-outer {
+            position: relative; width: 350px; height: 350px; margin: 20px auto;
+            border-radius: 50%; padding: 18px; box-sizing: border-box;
+            background: linear-gradient(145deg, #ffd700, #b8860b, #ffd700, #8b6508);
+            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5);
         }
 
+        .lights-container {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            border-radius: 50%; pointer-events: none;
+        }
+        .light {
+            position: absolute; width: 10px; height: 10px; background: white;
+            border-radius: 50%; top: 5px; left: calc(50% - 5px);
+            transform-origin: 50% 170px; box-shadow: 0 0 12px white;
+            animation: blink 1s infinite;
+        }
+
+        /* KOŁO ZGODNE Z TWOIM WZOREM */
         #wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 10px solid #0f172a;
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #000;
             background: conic-gradient(
-                #0ea5e9 0deg 60deg,    /* +1 */
-                #6366f1 60deg 120deg,  /* +5 */
-                #ec4899 120deg 180deg, /* +10 */
-                var(--red) 180deg 240deg, /* 0 */
-                var(--gold) 240deg 300deg, /* +25 */
-                #10b981 300deg 360deg  /* +2 */
+                #10b981 0deg 60deg,    /* 0 (Green) */
+                #0ea5e9 60deg 120deg,  /* +25 (Blue) */
+                #6366f1 120deg 180deg, /* +2 (Purple) */
+                #d946ef 180deg 240deg, /* +1 (Pink) */
+                #ef4444 240deg 300deg, /* +5 (Red) */
+                #fbbf24 300deg 360deg  /* +10 (Orange) */
             );
             transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1);
             position: relative; overflow: hidden;
         }
-        
-        /* ETYKIETY - IDEALNIE MIĘDZY PROMIENIAMI */
+
+        /* LICZBY - IDEALNIE WYCENTROWANE I POZIOME */
         .label {
-            position: absolute; 
-            width: 50%; /* Długość promienia */
-            height: 60px; 
-            top: calc(50% - 30px); 
-            left: 50%;
-            transform-origin: left center; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; /* To ustawia napis na środku długości promienia */
-            padding-left: 50px; /* Korekta, by napis był w najszerszym miejscu pola */
-            box-sizing: border-box;
-            font-weight: 900; 
-            color: white; 
-            font-size: 1.6rem;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
-            pointer-events: none;
+            position: absolute; width: 80px; height: 40px; top: 50%; left: 50%;
+            margin-top: -20px; margin-left: -40px; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: white; font-size: 2.2rem;
+            text-shadow: 3px 3px 10px rgba(0,0,0,1);
+        }
+
+        /* BIAŁA STRZAŁKA */
+        .arrow {
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent;
+            border-top: 45px solid #ffffff; z-index: 100; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
         }
 
         .wheel-center {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 60px; height: 60px; background: #0f172a; border-radius: 50%;
-            z-index: 40; border: 4px solid white; display: flex; align-items: center; justify-content: center;
+            width: 65px; height: 65px; background: radial-gradient(circle, #333, #000);
+            z-index: 50; border: 4px solid var(--gold); border-radius: 50%;
+            box-shadow: 0 0 20px black; display: flex; align-items: center; justify-content: center;
         }
 
         button {
-            background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; 
-            border: none; padding: 20px; border-radius: 20px; font-weight: 800; 
-            width: 100%; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
-            margin-top: 15px; box-shadow: 0 8px 0 #1d4ed8;
+            background: linear-gradient(180deg, var(--gold), #b8860b); 
+            color: black; border: none; padding: 22px; border-radius: 25px; 
+            font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer; 
+            transition: 0.2s; margin-top: 25px; text-transform: uppercase;
+            box-shadow: 0 8px 0 #785a06;
         }
-        button:active { transform: translateY(4px); box-shadow: 0 4px 0 #1d4ed8; }
-        button:disabled { background: #334155; color: #64748b; box-shadow: none; transform: translateY(4px); opacity: 0.6; }
+        button:active { transform: translateY(4px); box-shadow: 0 4px 0 #785a06; }
+        button:disabled { background: #333; color: #555; box-shadow: none; transform: translateY(8px); }
 
-        #status { font-weight: 900; margin: 15px 0; min-height: 1.6em; color: var(--gold); font-size: 1.4rem; }
+        #status { font-weight: 900; margin: 20px 0; color: var(--gold); font-size: 1.5rem; text-transform: uppercase; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
@@ -95,23 +101,15 @@
             <span id="balance">0</span> <span>💎</span>
         </div>
 
-        <div class="wheel-box">
+        <div class="wheel-outer">
             <div class="arrow"></div>
+            <div class="lights-container" id="lights"></div>
             <div class="wheel-center">💎</div>
-            <div id="wheel">
-                <div class="label" style="transform: rotate(30deg)">+1</div>
-                <div class="label" style="transform: rotate(90deg)">+5</div>
-                <div class="label" style="transform: rotate(150deg)">+10</div>
-                <div class="label" style="transform: rotate(210deg)">0</div>
-                <div class="label" style="transform: rotate(270deg)">+25</div>
-                <div class="label" style="transform: rotate(330deg)">+2</div>
-            </div>
+            <div id="wheel"></div>
         </div>
 
-        <div id="status">GOTOWY?</div>
-        
+        <div id="status">ZAKRĘĆ I WYGRAJ!</div>
         <button id="spin-btn" onclick="startSpin()" disabled>ZAKRĘĆ ZA 2 💎</button>
-        <div style="margin-top:12px; font-size:0.8rem; color:#94a3b8;">KOSZT: 2 DIAMENTY</div>
     </div>
 
     <script>
@@ -120,55 +118,78 @@
         
         const sb = supabase.createClient(S_URL, S_KEY);
         const tg = window.Telegram.WebApp;
-        const spinCost = 2;
+        
+        // Nagrody: 0, 25, 2, 1, 5, 10
+        const prizes = [0, 25, 2, 1, 5, 10]; 
+        const wheel = document.getElementById('wheel');
+        
+        // Precyzyjne rozmieszczenie liczb poziomo w masie segmentów
+        prizes.forEach((val, i) => {
+            const angle = i * 60 + 30; // Celujemy w środek każdego pola
+            const dist = 105; // Odległość od środka koła
+            const x = dist * Math.cos((angle - 90) * Math.PI / 180);
+            const y = dist * Math.sin((angle - 90) * Math.PI / 180);
+            
+            const div = document.createElement('div');
+            div.className = 'label';
+            div.style.left = `calc(50% + ${x}px)`;
+            div.style.top = `calc(50% + ${y}px)`;
+            div.innerText = val === 0 ? "0" : `+${val}`;
+            wheel.appendChild(div);
+        });
 
-        let userBalance = 0;
-        const userId = tg.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "8461677673";
+        // Generacja 24 mrugających lampek
+        const lights = document.getElementById('lights');
+        for(let i=0; i<24; i++) {
+            const l = document.createElement('div');
+            l.className = 'light';
+            l.style.transform = `rotate(${i * 15}deg)`;
+            l.style.animationDelay = `${i * 0.1}s`;
+            lights.appendChild(l);
+        }
 
-        async function sync() {
-            try {
-                tg.ready(); tg.expand();
-                let { data } = await sb.from('profiles').select('*').eq('user_id', userId).maybeSingle();
-                if (!data) {
-                    const { data: n } = await sb.from('profiles').insert([{ user_id: userId, balance: 10 }]).select().single();
-                    data = n;
-                }
-                userBalance = data.balance || 0;
-                document.getElementById('balance').innerText = userBalance;
-                document.getElementById('spin-btn').disabled = (userBalance < spinCost);
-            } catch (e) { console.error(e); }
+        let bal = 0;
+        const uid = tg.initDataUnsafe?.user?.id?.toString() || "8461677673";
+
+        async function init() {
+            tg.ready(); tg.expand();
+            let { data } = await sb.from('profiles').select('*').eq('user_id', uid).maybeSingle();
+            if (!data) {
+                const { data: n } = await sb.from('profiles').insert([{ user_id: uid, balance: 10 }]).select().single();
+                data = n;
+            }
+            bal = data.balance || 0;
+            document.getElementById('balance').innerText = bal;
+            document.getElementById('spin-btn').disabled = (bal < 2);
         }
 
         async function startSpin() {
-            if (userBalance < spinCost) return;
+            if (bal < 2) return;
             const btn = document.getElementById('spin-btn');
             btn.disabled = true;
-            document.getElementById('status').innerText = "KRĘCIMY...";
+            document.getElementById('status').innerText = "LOSOWANIE...";
 
-            const prizes = [1, 5, 10, 0, 25, 2];
             const winIdx = Math.floor(Math.random() * prizes.length);
-            const winValue = prizes[winIdx];
+            const winVal = prizes[winIdx];
 
-            userBalance -= spinCost;
-            await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
-            document.getElementById('balance').innerText = userBalance;
+            bal -= 2;
+            await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
+            document.getElementById('balance').innerText = bal;
 
-            // MATEMATYKA: Obracamy tak, by środek wybranego segmentu (winIdx * 60 + 30) był na górze (0 stopni)
-            const targetRotation = (360 - (winIdx * 60 + 30));
-            const totalRotation = 3600 + targetRotation; 
-
-            document.getElementById('wheel').style.transform = `rotate(${totalRotation}deg)`;
+            // MATEMATYKA: 10 obrotów + (360 - środek segmentu)
+            const rotation = 3600 + (360 - (winIdx * 60 + 30));
+            wheel.style.transform = `rotate(${rotation}deg)`;
 
             setTimeout(async () => {
-                userBalance += winValue;
-                await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
-                document.getElementById('balance').innerText = userBalance;
-                document.getElementById('status').innerText = winValue > 0 ? `WYGRANA: +${winValue} 💎` : "PECH! 0 💎";
-                btn.disabled = (userBalance < spinCost);
+                bal += winVal;
+                await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
+                document.getElementById('balance').innerText = bal;
+                document.getElementById('status').innerText = winVal > 0 ? `WYGRANA: +${winVal} 💎` : "PECH! 0 💎";
+                btn.disabled = (bal < 2);
             }, 4100);
         }
 
-        sync();
+        init();
     </script>
 </body>
 </html>
