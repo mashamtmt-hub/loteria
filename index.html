@@ -9,147 +9,79 @@
     <style>
         :root { --primary: #38bdf8; --bg: #0f172a; --accent: #1e293b; }
         body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: white; 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
             margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; overflow: hidden; box-sizing: border-box;
+            min-height: 100vh; box-sizing: border-box;
         }
-        h1 { font-size: 1.4rem; color: var(--primary); margin: 10px 0; text-transform: uppercase; text-shadow: 0 0 10px rgba(56,189,248,0.3); }
-        #spins-info { font-size: 1.1rem; color: #fbbf24; margin-bottom: 10px; font-weight: bold; }
-
-        .wheel-container { position: relative; width: 260px; height: 260px; margin: 20px 0; }
+        .wheel-container { position: relative; width: 240px; height: 240px; margin: 20px 0; }
         #wheel {
-            width: 100%; height: 100%; border-radius: 50%;
-            border: 6px solid var(--accent); box-sizing: border-box;
-            background: conic-gradient(
-                #3b82f6 0deg 60deg, #1d4ed8 60deg 120deg, 
-                #3b82f6 120deg 180deg, #1d4ed8 180deg 240deg,
-                #3b82f6 240deg 300deg, #1d4ed8 300deg 360deg
-            );
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent);
+            background: conic-gradient(#3b82f6 0 60deg, #1d4ed8 60deg 120deg, #3b82f6 120deg 180deg, #1d4ed8 180deg 240deg, #3b82f6 240deg 300deg, #1d4ed8 300deg 360deg);
             transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
-            position: relative;
         }
-        #wheel::after {
-            content: "💎"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 2rem; background: var(--bg); width: 55px; height: 55px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; border: 3px solid var(--primary);
-        }
-        .arrow {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 14px solid transparent;
-            border-right: 14px solid transparent; border-top: 24px solid #ef4444; z-index: 10;
-        }
-
-        button {
-            background: linear-gradient(135deg, var(--primary), #2563eb);
-            color: white; border: none; padding: 16px 0; font-size: 1.1rem;
-            font-weight: bold; border-radius: 14px; cursor: pointer;
-            width: 100%; max-width: 280px; margin-top: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: 0.2s;
-        }
-        button:active { transform: scale(0.97); }
-        button:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: default; }
-        
-        #status { margin-top: 15px; font-size: 1.2rem; height: 1.5em; font-weight: bold; color: #f8fafc; }
-        .balance-footer { margin-top: auto; padding: 15px 0; font-size: 1rem; color: #94a3b8; border-top: 1px solid var(--accent); width: 100%; }
+        button { background: #38bdf8; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; width: 100%; max-width: 250px; cursor: pointer; }
+        button:disabled { background: #334155; }
     </style>
 </head>
 <body>
-
     <h1>Loteria Diamentów</h1>
     <div id="spins-info">Inicjalizacja...</div>
-
-    <div class="wheel-container">
-        <div class="arrow"></div>
-        <div id="wheel"></div>
-    </div>
-
+    <div class="wheel-container"><div id="wheel"></div></div>
     <button id="spin-button" onclick="startSpin()" disabled>ZAKRĘĆ!</button>
     <div id="status"></div>
-    <div id="balance-display" class="balance-footer">Saldo: 0 💎</div>
+    <div id="balance-display" style="margin-top:20px;">Saldo: 0 💎</div>
 
     <script>
         const SUPABASE_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tele = window.Telegram.WebApp;
         tele.ready();
-        tele.expand();
 
-        // --- ULEPSZONE POBIERANIE ID ---
-        let userId = "test_user";
-        if (tele.initDataUnsafe && tele.initDataUnsafe.user) {
-            userId = tele.initDataUnsafe.user.id.toString();
-        } else {
-            const urlParams = new URLSearchParams(window.location.search);
-            userId = urlParams.get('user_id') || "test_user";
-        }
-
+        let userId = tele.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "test_user";
         let userSpins = 0;
         let userBalance = 0;
 
         async function loadUserData() {
-            try {
-                let { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .single();
+            // PRÓBA POBRANIA LUB STWORZENIA PROFILU
+            let { data: profile, error } = await supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
 
-                if (profile) {
-                    userSpins = profile.spins || 0;
-                    userBalance = profile.balance || 0;
-                    document.getElementById('spins-info').innerText = `Dostępne spiny: ${userSpins}`;
-                    document.getElementById('balance-display').innerText = `Twoje saldo: ${userBalance} 💎`;
-                    document.getElementById('spin-button').disabled = (userSpins <= 0);
-                } else {
-                    document.getElementById('spins-info').innerText = "Nie znaleziono profilu ID: " + userId;
-                }
-            } catch (err) {
-                console.error("Błąd ładowania:", err);
-                document.getElementById('spins-info').innerText = "Błąd bazy danych.";
+            if (error) {
+                document.getElementById('spins-info').innerText = "Błąd bazy: " + error.message;
+                return;
+            }
+
+            if (!profile) {
+                // JEŚLI NIE MA PROFILU - TWÓRZYMY GO Z 5 SPINAMI NA START DO TESTU!
+                const { data: newProfile } = await supabase.from('profiles').insert([{ user_id: userId, spins: 5, balance: 0 }]).select().single();
+                profile = newProfile;
+            }
+
+            if (profile) {
+                userSpins = profile.spins;
+                userBalance = profile.balance;
+                document.getElementById('spins-info').innerText = "Spiny: " + userSpins + " (ID: " + userId + ")";
+                document.getElementById('balance-display').innerText = "Saldo: " + userBalance + " 💎";
+                document.getElementById('spin-button').disabled = (userSpins <= 0);
             }
         }
 
         async function startSpin() {
             if (userSpins <= 0) return;
+            document.getElementById('spin-button').disabled = true;
             
-            const btn = document.getElementById('spin-button');
-            btn.disabled = true;
-            document.getElementById('status').innerText = "Trwa losowanie...";
-
-            const { error: spinErr } = await supabase
-                .from('profiles')
-                .update({ spins: userSpins - 1 })
-                .eq('user_id', userId);
-
-            if (spinErr) {
-                alert("Błąd bazy danych przy odejmowaniu spina.");
-                btn.disabled = false;
-                return;
-            }
+            const { error } = await supabase.from('profiles').update({ spins: userSpins - 1 }).eq('user_id', userId);
+            if (error) { alert("Błąd zapisu spina!"); return; }
 
             const deg = Math.floor(Math.random() * 360) + 3600;
             document.getElementById('wheel').style.transform = `rotate(${deg}deg)`;
 
             setTimeout(async () => {
-                let prize = 0;
-                const chance = Math.random() * 100;
-                if (chance < 70) prize = Math.floor(Math.random() * 5) + 1;
-                else if (chance < 90) prize = Math.floor(Math.random() * 15) + 10;
-                else if (chance < 99) prize = 50;
-                else prize = 250;
-
-                document.getElementById('status').innerText = `WYGRANA: +${prize} 💎`;
-                
-                await supabase
-                    .from('profiles')
-                    .update({ balance: userBalance + prize })
-                    .eq('user_id', userId);
-
+                let prize = Math.floor(Math.random() * 10) + 1;
+                await supabase.from('profiles').update({ balance: userBalance + prize }).eq('user_id', userId);
                 loadUserData();
+                document.getElementById('status').innerText = "Wygrana: " + prize + " 💎";
             }, 4000);
         }
 
