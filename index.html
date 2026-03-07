@@ -47,23 +47,23 @@
             position: relative; overflow: hidden;
         }
         
-        /* ETYKIETY - IDEALNIE WYCENTROWANE W SEGMENCIE */
+        /* IDEALNE CENTROWANIE W 'BRZUCHU' POLA */
         .label {
             position: absolute; 
-            width: 50%; /* Od środka do krawędzi */
+            width: 50%; /* Promień */
             height: 60px; 
             top: calc(50% - 30px); 
             left: 50%;
             transform-origin: left center; 
             display: flex; 
             align-items: center; 
-            justify-content: center; /* Centruje wzdłuż promienia */
-            padding-left: 45px; /* Odsuwa od ciasnego środka koła */
+            justify-content: center; 
+            padding-left: 65px; /* Przesunięcie do środka masy pola */
             box-sizing: border-box;
             font-weight: 900; 
             color: white; 
-            font-size: 1.8rem; /* Jeszcze większe i czytelniejsze */
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
+            font-size: 2rem; 
+            text-shadow: 2px 2px 10px rgba(0,0,0,1);
             pointer-events: none;
         }
 
@@ -146,13 +146,11 @@
             const winIndex = Math.floor(Math.random() * prizes.length);
             const winValue = prizes[winIndex];
 
-            // Pobranie i odjęcie kosztu
             userBalance -= spinCost;
             await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
             document.getElementById('balance').innerText = userBalance;
 
-            // OBLICZENIA OBROTU
-            // Celujemy tak, by środek segmentu (winIndex * 60 + 30) był na górze (0 stopni)
+            // MATEMATYKA OBROTU - TRAFIA W PUNKT
             const targetAngle = (winIndex * 60) + 30;
             const totalRotation = 3600 + (360 - targetAngle); 
 
@@ -167,4 +165,16 @@
                 if (winValue === 25) {
                     document.getElementById('status').innerText = "🔥 JACKPOT +25! 🔥";
                 } else if (winValue > 0) {
-                    document.getElementById('status').innerText =
+                    document.getElementById('status').innerText = `WYGRANA: +${winValue} 💎`;
+                } else {
+                    document.getElementById('status').innerText = "PECH! 0 💎";
+                }
+                
+                btn.disabled = (userBalance < spinCost);
+            }, 4000);
+        }
+
+        sync();
+    </script>
+</body>
+</html>
