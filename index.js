@@ -13,25 +13,25 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// --- 1. ENDPOINT DLA TWOJEGO KOŁA FORTUNY (WEB APP) ---
-// Ta część pozwala Twojej stronie na GitHubie poprosić o link do płatności Stars
+// --- 1. ENDPOINT DLA TWOJEGO KOŁA FORTUNY ---
 app.post("/create-stars-invoice", async (req, res) => {
   const { userId, amount } = req.body;
+  console.log(`📥 Otrzymano prośbę o fakturę: User ${userId}, Ilość: ${amount}`);
 
   try {
-    // Generowanie specjalnego linku do faktury Telegram Stars
     const link = await bot.telegram.createInvoiceLink(
       `Pakiet ${amount} Diamentów`,
       `Doładowanie salda 1:1 w Diamond Casino`,
       `user_${userId}_pay_${Date.now()}`,
-      "", // Provider token - pusty dla Stars (XTR)
-      "XTR", // Waluta: Telegram Stars
+      "", 
+      "XTR", // Telegram Stars
       [{ label: "Diamenty", amount: amount }]
     );
     
+    console.log("✅ Faktura wygenerowana pomyślnie");
     res.json({ link });
   } catch (e) {
-    console.error("Błąd tworzenia faktury:", e);
+    console.error("❌ Błąd tworzenia faktury:", e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -51,20 +51,15 @@ bot.start(async (ctx) => {
     if (!profile) {
       await supabase
         .from("profiles")
-        .insert([{ user_id: userId, balance: 10, spins: 0 }]); // 10 diamentów na start
+        .insert([{ user_id: userId, balance: 10, spins: 0 }]);
     }
 
     ctx.reply(
-      `🎰 Witaj ${userName}!\n\nZasada jest prosta: 1 Gwiazdka (Stars) = 1 Diament 💎.\nUżywaj diamentów, aby kręcić kołem i wygrywać więcej!`,
+      `🎰 Witaj ${userName}!\n\nZasada: 1 Stars ⭐️ = 1 Diament 💎.\nPowodzenia!`,
       {
         reply_markup: {
           inline_keyboard: [
-            [
-              {
-                text: "🎮 ZAGRAJ TERAZ",
-                web_app: { url: "https://mashamtmt-hub.github.io/loteria/" },
-              },
-            ],
+            [{ text: "🎮 ZAGRAJ TERAZ", web_app: { url: "https://mashamtmt-hub.github.io/loteria/" } }],
           ],
         },
       }
@@ -74,15 +69,13 @@ bot.start(async (ctx) => {
   }
 });
 
-// --- 3. OBSŁUGA PŁATNOŚCI (STARS) ---
-
-// Potwierdzenie gotowości do transakcji
+// --- 3. OBSŁUGA PŁATNOŚCI ---
 bot.on("pre_checkout_query", (ctx) => ctx.answerPreCheckoutQuery(true));
 
-// Co się dzieje po udanym zakupie
 bot.on("successful_payment", async (ctx) => {
   const userId = ctx.from.id.toString();
-  const amount = ctx.message.successful_payment.total_amount; // Ilość zapłaconych Stars
+  const amount = ctx.message.successful_payment.total_amount;
+  console.log(`💰 Udana wpłata: ${amount} Stars od użytkownika ${userId}`);
 
   try {
     let { data: profile } = await supabase
@@ -92,26 +85,18 @@ bot.on("successful_payment", async (ctx) => {
       .single();
 
     if (profile) {
-      // Dodajemy diamenty 1:1 do salda
       const newBalance = (profile.balance || 0) + amount;
-      
-      await supabase
-        .from("profiles")
-        .update({ balance: newBalance })
-        .eq("user_id", userId);
-      
-      ctx.reply(`✅ Sukces! Doładowano ${amount} 💎. Twoje nowe saldo to ${newBalance}. Powodzenia!`);
+      await supabase.from("profiles").update({ balance: newBalance }).eq("user_id", userId);
+      ctx.reply(`✅ Doładowano ${amount} 💎! Nowe saldo: ${newBalance}`);
     }
   } catch (err) {
-    console.error("Błąd po płatności:", err);
-    ctx.reply("Wystąpił błąd przy aktualizacji salda diamentów.");
+    console.error("❌ Błąd zapisu płatności:", err);
   }
 });
 
-app.get("/", (req, res) => res.send("Serwer bota i płatności Stars działa!"));
+app.get("/", (req, res) => res.send("Serwer bota Stars działa! 🚀"));
 
-// Render automatycznie przypisuje port, więc lepiej użyć process.env.PORT
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serwer HTTP na porcie ${PORT}`));
 
-bot.launch().then(() => console.log("Bot kasjera Stars podłączony! 🚀"));
+bot.launch().catch(err => console.error("Błąd startu bota:", err));
