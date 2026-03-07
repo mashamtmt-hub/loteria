@@ -2,90 +2,56 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Loteria Diamentów</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Połączenia</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #38bdf8; --bg: #0f172a; --accent: #1e293b; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
-            margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; box-sizing: border-box;
-        }
-        .wheel-container { position: relative; width: 240px; height: 240px; margin: 20px 0; }
-        #wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--accent);
-            background: conic-gradient(#3b82f6 0 60deg, #1d4ed8 60deg 120deg, #3b82f6 120deg 180deg, #1d4ed8 180deg 240deg, #3b82f6 240deg 300deg, #1d4ed8 300deg 360deg);
-            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
-        }
-        button { background: #38bdf8; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; width: 100%; max-width: 250px; cursor: pointer; }
-        button:disabled { background: #334155; }
+        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .debug-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #38bdf8; font-size: 0.8rem; text-align: left; }
+        #wheel { width: 200px; height: 200px; border-radius: 50%; border: 5px solid #38bdf8; margin: 20px auto; background: conic-gradient(#3b82f6 0 180deg, #1d4ed8 180deg 360deg); transition: 4s; }
     </style>
 </head>
 <body>
     <h1>Loteria Diamentów</h1>
-    <div id="spins-info">Inicjalizacja...</div>
-    <div class="wheel-container"><div id="wheel"></div></div>
-    <button id="spin-button" onclick="startSpin()" disabled>ZAKRĘĆ!</button>
-    <div id="status"></div>
-    <div id="balance-display" style="margin-top:20px;">Saldo: 0 💎</div>
+    <div id="status-info">Łączenie z bazą...</div>
+    <div id="wheel"></div>
+    <div id="debug" class="debug-box">Logi systemowe:</div>
 
     <script>
         const SUPABASE_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
+        // TUTAJ WKLEJ NOWY KLUCZ SKOPIOWANY Z USTAWIEŃ:
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
-        
+
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const tele = window.Telegram.WebApp;
-        tele.ready();
+        const debug = document.getElementById('debug');
 
-        let userId = tele.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "test_user";
-        let userSpins = 0;
-        let userBalance = 0;
+        async function testConnection() {
+            // Pobieramy ID z linku: ?user_id=8461677673
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id') || "test_user";
+            
+            debug.innerHTML += `<br>> Szukam ID: ${userId}`;
 
-        async function loadUserData() {
-            // PRÓBA POBRANIA LUB STWORZENIA PROFILU
-            let { data: profile, error } = await supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', userId);
 
             if (error) {
-                document.getElementById('spins-info').innerText = "Błąd bazy: " + error.message;
-                return;
-            }
-
-            if (!profile) {
-                // JEŚLI NIE MA PROFILU - TWÓRZYMY GO Z 5 SPINAMI NA START DO TESTU!
-                const { data: newProfile } = await supabase.from('profiles').insert([{ user_id: userId, spins: 5, balance: 0 }]).select().single();
-                profile = newProfile;
-            }
-
-            if (profile) {
-                userSpins = profile.spins;
-                userBalance = profile.balance;
-                document.getElementById('spins-info').innerText = "Spiny: " + userSpins + " (ID: " + userId + ")";
-                document.getElementById('balance-display').innerText = "Saldo: " + userBalance + " 💎";
-                document.getElementById('spin-button').disabled = (userSpins <= 0);
+                debug.innerHTML += `<br>> ❌ BŁĄD: ${error.message}`;
+                debug.style.borderColor = "red";
+                document.getElementById('status-info').innerText = "Błąd połączenia!";
+            } else {
+                debug.innerHTML += `<br>> ✅ SUKCES: Znaleziono wierszy: ${data.length}`;
+                if (data.length > 0) {
+                    document.getElementById('status-info').innerHTML = `SPINY: <b>${data[0].spins}</b>`;
+                } else {
+                    document.getElementById('status-info').innerText = "Nie znaleziono takiego ID w bazie.";
+                }
             }
         }
 
-        async function startSpin() {
-            if (userSpins <= 0) return;
-            document.getElementById('spin-button').disabled = true;
-            
-            const { error } = await supabase.from('profiles').update({ spins: userSpins - 1 }).eq('user_id', userId);
-            if (error) { alert("Błąd zapisu spina!"); return; }
-
-            const deg = Math.floor(Math.random() * 360) + 3600;
-            document.getElementById('wheel').style.transform = `rotate(${deg}deg)`;
-
-            setTimeout(async () => {
-                let prize = Math.floor(Math.random() * 10) + 1;
-                await supabase.from('profiles').update({ balance: userBalance + prize }).eq('user_id', userId);
-                loadUserData();
-                document.getElementById('status').innerText = "Wygrana: " + prize + " 💎";
-            }, 4000);
-        }
-
-        loadUserData();
+        testConnection();
     </script>
 </body>
 </html>
