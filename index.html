@@ -147,32 +147,34 @@
             modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        async function buyDiamonds(amount) {
-            try {
-                // Prośba do Twojego bota na Renderze o link do faktury
-                const response = await fetch(`${RENDER_URL}/create-stars-invoice`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: uid, amount: amount })
-                });
-                
-                const data = await response.json();
-                
-                if (data.link) {
-                    tg.openInvoice(data.link, (status) => {
-                        if (status === 'paid') {
-                            tg.showAlert(`Sukces! Doładowano ${amount} diamentów.`);
-                            setTimeout(init, 1500); // Odśwież saldo
-                            toggleShop();
-                        }
-                    });
-                } else {
-                    tg.showAlert("Błąd kasjera. Sprawdź czy Render działa.");
+       async function buyDiamonds(amount) {
+    tg.showScanQrPopup({ text: "Budzenie kasjera... (może to zająć 30s)" }); // Pokazuje animację ładowania
+
+    try {
+        const response = await fetch(`${RENDER_URL}/create-stars-invoice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: uid, amount: amount })
+        });
+        
+        const data = await response.json();
+        tg.closeScanQrPopup(); // Zamyka ładowanie
+
+        if (data.link) {
+            tg.openInvoice(data.link, (status) => {
+                if (status === 'paid') {
+                    tg.showAlert("💎 Diamenty zostały dodane!");
+                    setTimeout(init, 2000);
                 }
-            } catch (e) {
-                tg.showAlert("Błąd połączenia z serwerem płatności.");
-            }
+            });
+        } else {
+            throw new Error("Brak linku w odpowiedzi");
         }
+    } catch (e) {
+        tg.closeScanQrPopup();
+        tg.showAlert("Kasjer jeszcze się nie obudził. Spróbuj kliknąć ponownie za 10 sekund!");
+    }
+}
 
         async function startSpin() {
             if (bal < 2) return;
@@ -217,4 +219,5 @@
     </script>
 </body>
 </html>
+
 
