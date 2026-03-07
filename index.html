@@ -27,11 +27,10 @@
 
         .wheel-box { position: relative; width: 330px; height: 330px; margin: 25px auto; }
         
-        /* Strzałka na górze */
         .arrow {
             position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
-            border-top: 45px solid #ffffff; z-index: 40; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+            border-top: 45px solid #ffffff; z-index: 50; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
         }
 
         #wheel {
@@ -48,22 +47,23 @@
             position: relative; overflow: hidden;
         }
         
-        /* Napisy - teraz wycentrowane w środku segmentów */
+        /* POPRAWIONE NAPISY - WYCENTROWANE W POLU */
         .label {
             position: absolute; 
-            width: 50%; /* Długość od środka do brzegu */
+            width: 50%; 
             height: 60px; 
             top: calc(50% - 30px); 
             left: 50%;
             transform-origin: left center; 
             display: flex; 
             align-items: center; 
-            justify-content: center; /* Centrowanie w poziomie segmentu */
-            padding-left: 40px; /* Przesunięcie od samego środka koła w głąb pola */
+            justify-content: flex-end; /* Przesuwa tekst do zewnętrznej części */
+            padding-right: 45px; /* Odstęp od krawędzi koła, by trafić w środek pola */
+            box-sizing: border-box;
             font-weight: 900; 
             color: white; 
-            font-size: 1.6rem;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+            font-size: 1.7rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
@@ -71,7 +71,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 65px; height: 65px; background: #0f172a; border-radius: 50%;
             z-index: 35; border: 4px solid white; display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; box-shadow: 0 0 20px rgba(0,0,0,0.6);
+            box-shadow: 0 0 20px rgba(0,0,0,0.6);
         }
 
         button {
@@ -148,14 +148,11 @@
             const winIndex = Math.floor(Math.random() * prizes.length);
             const winValue = prizes[winIndex];
 
-            // Odjęcie kosztu
             userBalance -= spinCost;
             await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
             document.getElementById('balance').innerText = userBalance;
 
-            // OBLICZENIA OBROTU
-            // Każdy segment ma 60 stopni. Środek segmentu i to (i * 60 + 30).
-            // Aby segment trafił pod strzałkę na górze, obracamy o: 360 - (i * 60 + 30).
+            // OBLICZENIA OBROTU - IDEALNE CENTROWANIE
             const targetRotation = (360 - (winIndex * 60 + 30));
             const totalRotation = 3600 + targetRotation; 
 
@@ -179,7 +176,7 @@
             }, 4000);
         }
 
-        sync();
+            sync();
     </script>
 </body>
 </html>
