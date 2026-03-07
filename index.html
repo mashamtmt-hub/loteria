@@ -2,122 +2,190 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koło Fortuny</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loteria Diamentów</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background: linear-gradient(135deg, #a855f7, #6366f1);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%); 
+            color: white; 
+            padding: 20px;
             overflow: hidden;
         }
-        .header { text-align: center; margin-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 24px; }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border-radius: 30px;
-            padding: 20px;
-            width: 85%;
-            max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
+        h1 { color: #00d2ff; text-shadow: 0 0 10px #00d2ff; }
+        .wheel-container { 
+            position: relative; 
+            width: 320px; 
+            height: 320px; 
+            margin: 30px auto; 
+            border: 5px solid #00d2ff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00d2ff;
         }
-
-        .wheel-box {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            margin: 20px auto;
-        }
-
-        #wheel {
-            width: 100%;
+        #wheel { 
+            width: 100%; 
             height: 100%;
-            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
+            border-radius: 50%;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); 
         }
-
-        #pointer {
+        /* Strzałka wskazująca nagrodę */
+        .arrow {
             position: absolute;
-            top: -10px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff0044;
             z-index: 10;
         }
-
-        .btn {
-            background: linear-gradient(to right, #3b82f6, #a855f7);
-            border: none;
-            color: white;
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
+        button { 
+            padding: 15px 40px; 
+            font-size: 20px; 
             font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            text-transform: uppercase;
+            cursor: pointer; 
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5); 
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: 0.3s;
         }
-        
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { opacity: 0.5; }
-
-        .balance { font-size: 20px; font-weight: bold; color: #fbbf24; margin-bottom: 10px; }
+        button:hover { transform: scale(1.05); }
+        button:disabled { background: #444; cursor: not-allowed; transform: scale(1); box-shadow: none; }
+        #spins-info { font-size: 1.2rem; margin-bottom: 10px; color: #ffcc00; }
+        #status { margin-top: 20px; font-size: 1.3rem; min-height: 1.5em; font-weight: bold; }
+        .balance-info { font-size: 0.9rem; color: #aaa; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🎰 Koło Fortuny</h1>
-        <p>Zakręć i wygraj nagrody!</p>
+    <h1>💎 LOTERIA DIAMENTÓW 💎</h1>
+    <div id="spins-info">Ładowanie Twoich spinów...</div>
+
+    <div class="wheel-container">
+        <div class="arrow"></div>
+        <img id="wheel" src="https://img.freepik.com/premium-vector/wheel-fortune-isolated-white-background_164343-41.jpg" alt="Koło fortuny">
     </div>
 
-    <div class="card">
-        <div class="balance">TOKENY: <span id="val">0</span></div>
-        <div class="wheel-box">
-            <img id="pointer" src="https://i.postimg.cc/hfRwWzkj/strzalka.png">
-            <img id="wheel" src="https://i.postimg.cc/D83DkJ9G/kolo.png">
-        </div>
-        <button id="spinBtn" class="btn" onclick="spin()">ZAKRĘĆ KOŁEM!</button>
-    </div>
-
-    <p style="font-size: 12px; margin-top: 20px; opacity: 0.8;">💫 Codziennie masz szansę na darmowe obroty!</p>
+    <button id="spin-button" onclick="startSpin()" disabled>ZAKRĘĆ KOŁEM!</button>
+    
+    <div id="status"></div>
+    <div id="balance-display" class="balance-info">Twoje saldo: --- 💎</div>
 
     <script>
-        let rot = 0;
-        let bal = 0;
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // --- KONFIGURACJA ---
+        const SUPABASE_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
+        const SUPABASE_KEY = "TeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8"; // WKLEJ SWÓJ KLUCZ TUTAJ
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const tele = window.Telegram.WebApp;
+        tele.expand();
 
-        function spin() {
-            const btn = document.getElementById('spinBtn');
-            btn.disabled = true;
-            
-            const extra = Math.floor(Math.random() * 360) + 1800;
-            rot += extra;
-            document.getElementById('wheel').style.transform = `rotate(${rot}deg)`;
+        let userSpins = 0;
+        let userBalance = 0;
+        // Pobieramy ID z Telegrama lub używamy testowego dla przeglądarki
+        const userId = tele.initDataUnsafe?.user?.id?.toString() || "test_user";
 
-            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        // --- POBIERANIE DANYCH Z BAZY ---
+        async function loadUserData() {
+            try {
+                let { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
 
-            setTimeout(() => {
-                btn.disabled = false;
-                bal += 100;
-                document.getElementById('val').innerText = bal;
-                
-                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert("Gratulacje! Wygrałeś 100 monet!");
-            }, 5000);
+                if (profile) {
+                    userSpins = profile.spins || 0;
+                    userBalance = profile.balance || 0;
+                    
+                    document.getElementById('spins-info').innerText = `Masz: ${userSpins} zakręceń`;
+                    document.getElementById('balance-display').innerText = `Twoje saldo: ${userBalance} 💎`;
+                    
+                    if (userSpins > 0) {
+                        document.getElementById('spin-button').disabled = false;
+                        document.getElementById('spin-button').innerText = "ZAKRĘĆ KOŁEM!";
+                    } else {
+                        document.getElementById('spin-button').disabled = true;
+                        document.getElementById('spin-button').innerText = "BRAK SPINÓW";
+                    }
+                } else {
+                    document.getElementById('spins-info').innerText = "Nie masz jeszcze konta. Kup spiny u bota!";
+                }
+            } catch (err) {
+                console.error("Błąd:", err);
+            }
         }
+
+        // --- LOGIKA LOSOWANIA I PROCENTÓW ---
+        async function startSpin() {
+            if (userSpins <= 0) return;
+
+            // Blokujemy przycisk na czas kręcenia
+            document.getElementById('spin-button').disabled = true;
+            document.getElementById('status').innerText = "Losowanie...";
+            
+            // 1. Odejmujemy 1 spin w bazie danych
+            const { error } = await supabase
+                .from('profiles')
+                .update({ spins: userSpins - 1 })
+                .eq('user_id', userId);
+
+            if (error) {
+                alert("Błąd połączenia z bazą!");
+                document.getElementById('spin-button').disabled = false;
+                return;
+            }
+
+            // 2. Animacja kręcenia (losowy obrót + 10 pełnych obrotów)
+            const randomDegree = Math.floor(Math.random() * 360) + 3600;
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${randomDegree}deg)`;
+
+            // 3. Logika nagród wg Twoich szans
+            setTimeout(async () => {
+                let prize = 0;
+                const chance = Math.random() * 100;
+
+                if (chance < 70) { 
+                    // 70% szans: 1-5 diamentów
+                    prize = Math.floor(Math.random() * 5) + 1;
+                    document.getElementById('status').innerHTML = `Wygrana: <span style="color:#00d2ff">${prize} diamentów!</span> 💎`;
+                } else if (chance < 90) { 
+                    // 20% szans: 10-25 diamentów
+                    prize = Math.floor(Math.random() * 15) + 10;
+                    document.getElementById('status').innerHTML = `Super! <span style="color:#00ff88">${prize} diamentów!</span> 💎💎`;
+                } else if (chance < 99) { 
+                    // 9% szans: 50 diamentów
+                    prize = 50;
+                    document.getElementById('status').innerHTML = `🏆 WIELKA WYGRANA: <span style="color:#ffcc00">${prize} diamentów!</span>`;
+                } else { 
+                    // 1% szans: JACKPOT!
+                    prize = 250;
+                    document.getElementById('status').innerHTML = `🔥 <span style="color:#ff0044">JACKPOT: ${prize} DIAMENTÓW!</span> 🔥`;
+                }
+
+                // 4. Aktualizacja salda (balance) w bazie danych
+                const { error: upError } = await supabase
+                    .from('profiles')
+                    .update({ balance: userBalance + prize })
+                    .eq('user_id', userId);
+
+                // 5. Odśwież dane na ekranie
+                loadUserData();
+                
+            }, 4000); // Czekamy 4 sekundy na koniec animacji
+        }
+
+        // Inicjalizacja przy starcie strony
+        loadUserData();
     </script>
 </body>
 </html>
