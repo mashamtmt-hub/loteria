@@ -3,38 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Loteria Diamentów</title>
+    <title>Loteria Diamentów - Naprawa</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --p: #38bdf8; --bg: #0f172a; }
-        body { background: var(--bg); color: white; font-family: system-ui, sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .card { background: #1e293b; padding: 25px; border-radius: 24px; border: 1px solid #334155; width: 100%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         #wheel { width: 220px; height: 220px; border-radius: 50%; border: 8px solid #334155; margin: 20px auto; background: conic-gradient(var(--p) 0 60deg, #1d4ed8 60deg 120deg, var(--p) 120deg 180deg, #1d4ed8 180deg 240deg, var(--p) 240deg 300deg, #1d4ed8 300deg 360deg); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); position: relative; }
         #wheel::after { content: '💎'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; background: var(--bg); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--p); }
-        .status { font-size: 1.1rem; font-weight: bold; color: #fbbf24; margin: 15px 0; min-height: 1.5em; }
-        button { background: var(--p); color: #0f172a; border: none; padding: 18px; border-radius: 16px; font-weight: 800; cursor: pointer; width: 100%; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(56,189,248,0.4); }
-        button:disabled { background: #334155; color: #64748b; box-shadow: none; transform: none !important; }
-        button:active { transform: scale(0.96); }
-        #debug { font-family: monospace; font-size: 10px; color: #ef4444; margin-top: 20px; text-align: left; width: 100%; max-width: 300px; }
+        button { background: var(--p); color: #0f172a; border: none; padding: 18px; border-radius: 16px; font-weight: 800; cursor: pointer; width: 100%; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(56,189,248,0.4); }
+        button:disabled { background: #334155; color: #64748b; box-shadow: none; }
+        .debug-log { font-family: monospace; font-size: 10px; color: #ef4444; margin-top: 20px; background: #000; padding: 10px; border-radius: 8px; text-align: left; width: 100%; max-width: 320px; overflow-x: auto; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2 style="margin: 0 0 10px 0; color: var(--p)">DIAMENTOWY SPIN</h2>
-        <div id="status-info" class="status">Łączenie...</div>
-        
+        <h2 style="color: var(--p)">LOTERIA</h2>
+        <div id="status-info" style="font-weight: bold; margin: 10px 0;">Łączenie...</div>
         <div style="position: relative">
             <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #ef4444; z-index: 10;"></div>
             <div id="wheel"></div>
         </div>
-
         <button id="spin-btn" onclick="spin()" disabled>ZAKRĘĆ!</button>
-        <div id="balance" style="margin-top:20px; font-weight: 600; color: #94a3b8;">Saldo: -- 💎</div>
+        <div id="balance" style="margin-top:20px;">Saldo: -- 💎</div>
     </div>
 
-    <div id="debug"></div>
+    <div id="debug" class="debug-log">Logi: </div>
 
     <script>
         const SUPABASE_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
@@ -42,46 +38,56 @@
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tele = window.Telegram.WebApp;
-        
-        // Wykrywanie ID (Z linku lub Telegrama)
-        const userId = tele.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "8461677673";
 
-        function logError(msg) { document.getElementById('debug').innerText += "> " + msg + "\n"; }
+        function log(msg) { document.getElementById('debug').innerHTML += "> " + msg + "<br>"; }
+
+        // POBIERANIE ID - Jeśli Telegram zawiedzie, używamy ID z adresu URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = tele.initDataUnsafe?.user?.id?.toString() || urlParams.get('user_id') || "8461677673";
 
         async function load() {
+            log("Inicjalizacja dla ID: " + userId);
             try {
                 tele.ready();
                 tele.expand();
                 
-                // Kluczowa zmiana: używamy maybeSingle() zamiast single()
+                // 1. Próba pobrania profilu
                 let { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
 
                 if (error) throw error;
 
+                // 2. Jeśli nie ma profilu - REJESTRUJEMY GO AUTOMATYCZNIE
                 if (!data) {
-                    // Jeśli nie ma profilu - twórz go od razu z 5 spinami na test!
-                    logError("Profil nie istnieje. Tworzę...");
-                    const { data: n, error: e } = await supabase.from('profiles').insert([{ user_id: userId, balance: 10, spins: 5 }]).select().single();
-                    if (e) throw e;
-                    data = n;
+                    log("Profil nie istnieje. Tworzę nowy...");
+                    const { data: newData, error: insError } = await supabase
+                        .from('profiles')
+                        .insert([{ user_id: userId, balance: 10, spins: 5 }])
+                        .select().single();
+                    if (insError) throw insError;
+                    data = newData;
+                    log("Stworzono profil z 5 spinami!");
                 }
 
-                document.getElementById('status-info').innerText = "Dostępne spiny: " + data.spins;
+                // 3. Renderuj UI
+                document.getElementById('status-info').innerText = "Spiny: " + data.spins;
                 document.getElementById('balance').innerText = "Saldo: " + data.balance + " 💎";
                 document.getElementById('spin-btn').disabled = (data.spins <= 0);
                 window.userData = data;
+                log("Gotowe.");
 
             } catch (err) {
-                logError(err.message);
-                document.getElementById('status-info').innerText = "Błąd połączenia";
+                log("BŁĄD: " + err.message);
+                document.getElementById('status-info').innerText = "Błąd systemu.";
             }
         }
 
         async function spin() {
             const btn = document.getElementById('spin-btn');
             btn.disabled = true;
+            log("Losowanie...");
 
             try {
+                // Odejmij spin
                 const { error } = await supabase.from('profiles').update({ spins: window.userData.spins - 1 }).eq('user_id', userId);
                 if (error) throw error;
 
@@ -90,13 +96,14 @@
 
                 setTimeout(async () => {
                     const win = Math.floor(Math.random() * 20) + 5;
+                    // Dodaj wygraną
                     await supabase.from('profiles').update({ balance: window.userData.balance + win }).eq('user_id', userId);
                     load(); // Odśwież dane
                     alert("Wygrana: " + win + " 💎!");
                 }, 4000);
 
             } catch (err) {
-                logError("Błąd losowania: " + err.message);
+                log("Błąd spinu: " + err.message);
                 btn.disabled = false;
             }
         }
