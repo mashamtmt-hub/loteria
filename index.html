@@ -12,38 +12,26 @@
             text-align: center; 
             background: #0f172a; 
             color: white; 
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-        h1 { font-size: 1.5rem; color: #38bdf8; margin: 10px 0; }
-        
-        #spins-info { font-size: 1.1rem; color: #fbbf24; margin-bottom: 10px; font-weight: bold; }
+        h1 { font-size: 1.4rem; color: #38bdf8; margin: 10px 0; }
+        #spins-info { font-size: 1.1rem; color: #fbbf24; margin-bottom: 10px; }
 
+        /* Kontener na koło */
         .wheel-box {
             position: relative;
-            width: 280px;
-            height: 280px;
+            width: 260px; height: 260px;
             margin: 20px auto;
         }
-        
         #wheel {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
             border: 4px solid #38bdf8;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
             transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
         }
-
         .arrow {
-            position: absolute;
-            top: -15px;
-            left: 50%;
+            position: absolute; top: -15px; left: 50%;
             transform: translateX(-50%);
             width: 0; height: 0;
             border-left: 15px solid transparent;
@@ -54,23 +42,15 @@
 
         button {
             background: linear-gradient(to right, #38bdf8, #2563eb);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 80%;
-            max-width: 300px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            color: white; border: none;
+            padding: 15px 40px; font-size: 1.2rem; font-weight: bold;
+            border-radius: 12px; cursor: pointer;
+            margin-top: 20px; width: 80%;
         }
-
         button:disabled { background: #334155; color: #94a3b8; }
-
-        #status { margin-top: 15px; font-size: 1.2rem; height: 1.5em; color: #f8fafc; }
-        .balance-info { margin-top: 10px; font-size: 0.9rem; color: #94a3b8; }
+        
+        #status { margin-top: 20px; font-size: 1.2rem; font-weight: bold; min-height: 1.5em; }
+        .balance-info { margin-top: auto; padding-bottom: 20px; font-size: 1rem; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -89,7 +69,7 @@
 
     <script>
         const SUPABASE_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
-        // UWAGA: Tu wklej swój klucz BEZ litery T na początku!
+        // Upewnij się, że klucz zaczyna się od eyJ... (bez T na początku!)
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8"; 
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -105,8 +85,8 @@
             if (profile) {
                 userSpins = profile.spins || 0;
                 userBalance = profile.balance || 0;
-                document.getElementById('spins-info').innerText = `Spiny: ${userSpins}`;
-                document.getElementById('balance-display').innerText = `Saldo: ${userBalance} 💎`;
+                document.getElementById('spins-info').innerText = `Dostępne spiny: ${userSpins}`;
+                document.getElementById('balance-display').innerText = `Twoje saldo: ${userBalance} 💎`;
                 document.getElementById('spin-button').disabled = (userSpins <= 0);
             }
         }
@@ -114,15 +94,18 @@
         async function startSpin() {
             if (userSpins <= 0) return;
             document.getElementById('spin-button').disabled = true;
-            
-            // Odejmij spin
-            const { error } = await supabase.from('profiles').update({ spins: userSpins - 1 }).eq('user_id', userId);
-            if (error) { alert("Błąd bazy!"); return; }
+            document.getElementById('status').innerText = "Losowanie...";
 
+            // 1. Odejmij spin w bazie
+            const { error } = await supabase.from('profiles').update({ spins: userSpins - 1 }).eq('user_id', userId);
+            if (error) { alert("Błąd bazy danych!"); return; }
+
+            // 2. Animacja
             const deg = Math.floor(Math.random() * 360) + 3600;
             document.getElementById('wheel').style.transform = `rotate(${deg}deg)`;
 
             setTimeout(async () => {
+                // 3. Losowanie nagrody
                 let prize = 0;
                 const chance = Math.random() * 100;
                 if (chance < 70) prize = Math.floor(Math.random() * 5) + 1;
@@ -131,6 +114,8 @@
                 else prize = 250;
 
                 document.getElementById('status').innerText = `Wygrana: ${prize} 💎`;
+                
+                // 4. Zapisz wygraną
                 await supabase.from('profiles').update({ balance: userBalance + prize }).eq('user_id', userId);
                 loadUserData();
             }, 4000);
