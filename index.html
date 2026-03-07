@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Gold Casino</title>
+    <title>Diamond Gold Casino Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -22,11 +22,21 @@
         }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
 
-        /* ZŁOTA RAMA I LAMPKI */
+        /* ZŁOTA RAMA - FIX DLA IDEALNEGO WYCENTROWANIA */
         .wheel-outer {
-            position: relative; width: 350px; height: 350px; margin: 20px auto;
-            border-radius: 50%; padding: 18px; box-sizing: border-box;
-            background: linear-gradient(145deg, #ffd700, #b8860b, #ffd700, #8b6508);
+            position: relative; 
+            width: 350px; 
+            height: 350px; 
+            margin: 20px auto;
+            border-radius: 50%; 
+            
+            /* USUNIĘTO PADDING, WPROWADZONO FLEXBOX DLA PRECYZJI */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* ZMIANA NA GRADIENT RADIALNY (KOLISTY) DLA LEPSZEGO EFEKTU 3D */
+            background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%);
             box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5);
         }
 
@@ -37,13 +47,17 @@
         .light {
             position: absolute; width: 10px; height: 10px; background: white;
             border-radius: 50%; top: 5px; left: calc(50% - 5px);
-            transform-origin: 50% 170px; box-shadow: 0 0 12px white;
+            transform-origin: 50% 170px; /* Obrót wokół środka koła 350px */
+            box-shadow: 0 0 12px white;
             animation: blink 1s infinite;
         }
 
-        /* KOŁO ZGODNE Z TWOIM WZOREM */
+        /* KOŁO Z KOLORAMI - FIX ROZMIARU DLA ZŁOTEJ RAMY */
         #wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #000;
+            /* Średnica zewnętrzna (350px) - szerokość ramy (18px * 2) = 314px */
+            width: 314px; 
+            height: 314px;
+            border-radius: 50%; border: 6px solid #000;
             background: conic-gradient(
                 #10b981 0deg 60deg,    /* 0 (Green) */
                 #0ea5e9 60deg 120deg,  /* +25 (Blue) */
@@ -119,14 +133,13 @@
         const sb = supabase.createClient(S_URL, S_KEY);
         const tg = window.Telegram.WebApp;
         
-        // Nagrody: 0, 25, 2, 1, 5, 10
         const prizes = [0, 25, 2, 1, 5, 10]; 
         const wheel = document.getElementById('wheel');
         
-        // Precyzyjne rozmieszczenie liczb poziomo w masie segmentów
+        // POZYCJONOWANIE LICZB (W masie segmentu 314px)
         prizes.forEach((val, i) => {
-            const angle = i * 60 + 30; // Celujemy w środek każdego pola
-            const dist = 105; // Odległość od środka koła
+            const angle = i * 60 + 30;
+            const dist = 105; // Odległość od środka koła (idealny środek pola)
             const x = dist * Math.cos((angle - 90) * Math.PI / 180);
             const y = dist * Math.sin((angle - 90) * Math.PI / 180);
             
@@ -138,7 +151,7 @@
             wheel.appendChild(div);
         });
 
-        // Generacja 24 mrugających lampek
+        // GENERACJA LAMPK
         const lights = document.getElementById('lights');
         for(let i=0; i<24; i++) {
             const l = document.createElement('div');
@@ -176,7 +189,7 @@
             await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
             document.getElementById('balance').innerText = bal;
 
-            // MATEMATYKA: 10 obrotów + (360 - środek segmentu)
+            // MATEMATYKA OBROTU
             const rotation = 3600 + (360 - (winIdx * 60 + 30));
             wheel.style.transform = `rotate(${rotation}deg)`;
 
