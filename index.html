@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Elite Club</title>
+    <title>Diamond Elite Lottery</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --blue: #0ea5e9; --dark: #020617; --card: #1e293b; --gold: #fbbf24; }
+        :root { --blue: #0ea5e9; --dark: #020617; --card: #1e293b; --gold: #fbbf24; --red: #ef4444; --green: #22c55e; }
         body { 
             background: var(--dark); color: white; font-family: 'Inter', system-ui, sans-serif; 
             margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
@@ -16,50 +16,65 @@
         .container { 
             background: var(--card); padding: 30px; border-radius: 32px; 
             border: 1px solid #334155; width: 100%; max-width: 360px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); text-align: center;
         }
         .balance-card { 
-            background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2);
-            padding: 10px 20px; border-radius: 16px; display: inline-flex; align-items: center; gap: 8px;
-            margin-bottom: 20px;
+            background: rgba(14, 165, 233, 0.15); border: 2px solid var(--blue);
+            padding: 12px 25px; border-radius: 20px; display: inline-flex; align-items: center; gap: 10px;
+            margin-bottom: 25px; box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
         }
-        #balance { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+        #balance { font-size: 1.8rem; font-weight: 900; color: var(--blue); text-shadow: 0 0 10px rgba(14,165,233,0.5); }
 
         /* KOŁO FORTUNY */
-        .wheel-box { position: relative; width: 280px; height: 280px; margin: 20px auto; }
+        .wheel-box { position: relative; width: 300px; height: 300px; margin: 25px auto; }
         #wheel {
-            width: 100%; height: 100%; border-radius: 50%; border: 10px solid #0f172a;
+            width: 100%; height: 100%; border-radius: 50%; border: 8px solid #0f172a;
+            /* Kolory segmentów: +1, +5, +10, 0 (Red), +25 (Gold), +2 */
             background: conic-gradient(
-                #0ea5e9 0 60deg, #0284c7 60deg 120deg, 
-                #0ea5e9 120deg 180deg, #0284c7 180deg 240deg,
-                #0ea5e9 240deg 300deg, #0284c7 300deg 360deg
+                #3b82f6 0 60deg,    /* +1 💎 - Blue */
+                #6366f1 60deg 120deg,  /* +5 💎 - Indigo */
+                #a855f7 120deg 180deg, /* +10 💎 - Purple */
+                var(--red) 180deg 240deg, /* 0 💎 - Red */
+                var(--gold) 240deg 300deg, /* +25 💎 - Gold */
+                var(--green) 300deg 360deg /* +2 💎 - Green */
             );
             transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
-            position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(14, 165, 233, 0.3);
+            position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
         }
-        /* Napisy na kole */
+        
         .label {
-            position: absolute; width: 50%; height: 2px; top: 50%; left: 50%;
-            transform-origin: left center; font-weight: 800; text-align: right; padding-right: 20px;
-            pointer-events: none; color: rgba(255,255,255,0.9); font-size: 0.9rem;
+            position: absolute; width: 50%; height: 40px; top: calc(50% - 20px); left: 50%;
+            transform-origin: left center; font-weight: 900; text-align: right; 
+            padding-right: 35px; pointer-events: none; color: white; 
+            font-size: 1.1rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: flex-end;
         }
+
         .arrow {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
-            border-top: 30px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent;
+            border-top: 35px solid #ffffff; z-index: 20; 
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+        /* Środek koła */
+        .wheel-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; background: #0f172a; border-radius: 50%;
+            z-index: 15; border: 4px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
         }
 
         button {
             background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; 
             border: none; padding: 20px; border-radius: 20px; font-weight: 800; 
-            width: 100%; font-size: 1.1rem; cursor: pointer; transition: 0.2s;
-            margin-top: 10px; box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.5);
+            width: 100%; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+            margin-top: 15px; box-shadow: 0 8px 0 #1d4ed8;
         }
-        button:disabled { background: #334155; color: #64748b; box-shadow: none; opacity: 0.6; }
-        button:active { transform: scale(0.96); }
+        button:disabled { background: #334155; color: #64748b; box-shadow: none; transform: translateY(4px); opacity: 0.7; }
+        button:active { transform: translateY(2px); box-shadow: 0 4px 0 #1d4ed8; }
 
-        .cost-info { margin-top: 12px; font-size: 0.85rem; color: #94a3b8; }
-        #status { font-weight: bold; margin: 15px 0; min-height: 1.5em; color: var(--gold); }
+        .cost-info { margin-top: 15px; font-size: 0.9rem; color: #94a3b8; font-weight: 500; }
+        #status { font-weight: 800; margin: 15px 0; min-height: 1.6em; color: var(--gold); font-size: 1.2rem; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -71,20 +86,21 @@
 
         <div class="wheel-box">
             <div class="arrow"></div>
+            <div class="wheel-center">💎</div>
             <div id="wheel">
-                <div class="label" style="transform: rotate(30deg)">+1 💎</div>
-                <div class="label" style="transform: rotate(90deg)">+5 💎</div>
-                <div class="label" style="transform: rotate(150deg)">+10 💎</div>
-                <div class="label" style="transform: rotate(210deg)">0 💎</div>
-                <div class="label" style="transform: rotate(270deg)">+25 💎</div>
-                <div class="label" style="transform: rotate(330deg)">+2 💎</div>
+                <div class="label" style="transform: rotate(30deg)">+1</div>
+                <div class="label" style="transform: rotate(90deg)">+5</div>
+                <div class="label" style="transform: rotate(150deg)">+10</div>
+                <div class="label" style="transform: rotate(210deg)">0</div>
+                <div class="label" style="transform: rotate(270deg)">+25</div>
+                <div class="label" style="transform: rotate(330deg)">+2</div>
             </div>
         </div>
 
-        <div id="status">Gotowy do gry?</div>
+        <div id="status">SPRÓBUJ SZCZĘŚCIA!</div>
         
         <button id="spin-btn" onclick="startSpin()" disabled>ZAKRĘĆ ZA 2 💎</button>
-        <div class="cost-info">Koszt jednego zakręcenia to 2 diamenty</div>
+        <div class="cost-info">Koszt: 2 diamenty</div>
     </div>
 
     <script>
@@ -93,7 +109,7 @@
         
         const sb = supabase.createClient(S_URL, S_KEY);
         const tg = window.Telegram.WebApp;
-        const spinCost = 2; // Koszt spinu
+        const spinCost = 2;
 
         let userBalance = 0;
         const userId = tg.initDataUnsafe?.user?.id?.toString() || new URLSearchParams(window.location.search).get('user_id') || "8461677673";
@@ -101,6 +117,7 @@
         async function sync() {
             try {
                 tg.ready();
+                tg.expand();
                 let { data, error } = await sb.from('profiles').select('*').eq('user_id', userId).maybeSingle();
                 
                 if (!data) {
@@ -117,29 +134,45 @@
         async function startSpin() {
             if (userBalance < spinCost) return;
             const btn = document.getElementById('spin-btn');
+            const wheel = document.getElementById('wheel');
+            
             btn.disabled = true;
-            document.getElementById('status').innerText = "Losowanie...";
+            document.getElementById('status').innerText = "Kręcimy...";
 
-            // 1. Odejmij koszt wejścia w bazie
+            // Odejmij koszt
             userBalance -= spinCost;
             await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
             document.getElementById('balance').innerText = userBalance;
 
-            // 2. Animacja (losujemy kąt)
-            const rotation = Math.floor(Math.random() * 360) + 3600;
-            document.getElementById('wheel').style.transform = `rotate(${rotation}deg)`;
+            // Losowanie obrotu (min 10 pełnych obrotów + losowy kąt)
+            const randomExtra = Math.floor(Math.random() * 360);
+            const totalRotation = 3600 + randomExtra; 
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
 
             setTimeout(async () => {
-                // Wyliczenie nagrody na podstawie kąta (uproszczone dla demo)
-                const prizes = [1, 2, 25, 0, 10, 5];
-                const segment = Math.floor(((rotation % 360)) / 60);
-                const win = prizes[segment];
+                // MATEMATYKA WYGRANEJ:
+                // Ponieważ koło obraca się zgodnie z zegarem, musimy sprawdzić jaki segment trafi pod strzałkę (góra = 0 stopni).
+                // Formuła: (360 - (łączny_obrót % 360)) / 60
+                const actualAngle = (360 - (totalRotation % 360)) % 360;
+                const segmentIndex = Math.floor(actualAngle / 60);
+                
+                // prizes[] musi odpowiadać kolejności labeli w HTML (zaczynając od 0-60 stopni)
+                const prizes = [1, 5, 10, 0, 25, 2];
+                const win = prizes[segmentIndex];
 
                 userBalance += win;
                 await sb.from('profiles').update({ balance: userBalance }).eq('user_id', userId);
                 
                 document.getElementById('balance').innerText = userBalance;
-                document.getElementById('status').innerText = win > 0 ? `WYGRANA: +${win} 💎!` : "Może następnym razem!";
+                
+                if (win === 25) {
+                    document.getElementById('status').innerText = "🎉 JACKPOT! +25 💎";
+                } else if (win > 0) {
+                    document.getElementById('status').innerText = `WYGRANA: +${win} 💎`;
+                } else {
+                    document.getElementById('status').innerText = "PECH! 0 💎";
+                }
+                
                 btn.disabled = (userBalance < spinCost);
             }, 4000);
         }
