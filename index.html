@@ -10,11 +10,13 @@
         :root { --gold: #ffd700; --gold-dark: #8b6508; --dark: #070a0f; }
         body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; }
         
-        /* SALDO I PRZYCISK + */
+        /* SALDO I PRZYCISKI */
         .balance-container { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
         .balance-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--gold); padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
-        .add-btn { background: var(--gold); color: black; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 1.8rem; font-weight: 900; cursor: pointer; box-shadow: 0 0 15px var(--gold); transition: 0.2s; }
+        
+        .add-btn { background: var(--gold); color: black; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 1.8rem; font-weight: 900; cursor: pointer; box-shadow: 0 0 15px var(--gold); transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .gift-btn { background: #ef4444; box-shadow: 0 0 15px #ef4444; margin-left: 5px; }
         .add-btn:active { transform: scale(0.9); }
 
         .wheel-outer { position: relative; width: 350px; height: 350px; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%); box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5); }
@@ -48,6 +50,7 @@
         <div class="balance-container">
             <div class="balance-card"><span id="balance">0</span> <span>💎</span></div>
             <button class="add-btn" onclick="toggleShop()">+</button>
+            <button class="add-btn gift-btn" onclick="claimGift()">🎁</button>
         </div>
 
         <div class="wheel-outer">
@@ -88,7 +91,7 @@
 
     <script>
         // --- KONFIGURACJA ---
-        const RENDER_URL = "https://loteria-bot-9xwr.onrender.com"; // <-- WKLEJ TU SWÓJ LINK Z RENDERA
+        const RENDER_URL = "https://loteria-bot-9xwr.onrender.com";
         const S_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
         const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
         
@@ -141,41 +144,57 @@
             document.getElementById('spin-btn').disabled = (bal < 2);
         }
 
-        // --- SKLEP I PŁATNOŚCI ---
         function toggleShop() {
             const modal = document.getElementById('shop-modal');
             modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
         }
 
-       async function buyDiamonds(amount) {
-    tg.showScanQrPopup({ text: "Budzenie kasjera... (może to zająć 30s)" }); // Pokazuje animację ładowania
-
-    try {
-        const response = await fetch(`${RENDER_URL}/create-stars-invoice`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: uid, amount: amount })
-        });
-        
-        const data = await response.json();
-        tg.closeScanQrPopup(); // Zamyka ładowanie
-
-        if (data.link) {
-            tg.openInvoice(data.link, (status) => {
-                if (status === 'paid') {
-                    tg.showAlert("💎 Diamenty zostały dodane!");
-                    setTimeout(init, 2000);
+        // --- SKLEP / PŁATNOŚCI ---
+        async function buyDiamonds(amount) {
+            tg.showScanQrPopup({ text: "Budzenie kasjera... (może to zająć 30s)" });
+            try {
+                const response = await fetch(`${RENDER_URL}/create-stars-invoice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, amount: amount })
+                });
+                const data = await response.json();
+                tg.closeScanQrPopup();
+                if (data.link) {
+                    tg.openInvoice(data.link, (status) => {
+                        if (status === 'paid') {
+                            tg.showAlert("💎 Diamenty zostały dodane!");
+                            setTimeout(init, 2000);
+                        }
+                    });
                 }
-            });
-        } else {
-            throw new Error("Brak linku w odpowiedzi");
+            } catch (e) {
+                tg.closeScanQrPopup();
+                tg.showAlert("Spróbuj ponownie za chwilę (serwer wstaje).");
+            }
         }
-    } catch (e) {
-        tg.closeScanQrPopup();
-        tg.showAlert("Kasjer jeszcze się nie obudził. Spróbuj kliknąć ponownie za 10 sekund!");
-    }
-}
 
+        // --- DARMOWY PREZENT ---
+        async function claimGift() {
+            try {
+                const response = await fetch(`${RENDER_URL}/claim-gift`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    tg.showAlert(`🎁 ODEBRANO!\nOtrzymałeś 5 darmowych diamentów.`);
+                    setTimeout(init, 500);
+                } else {
+                    tg.showAlert(data.message);
+                }
+            } catch (e) {
+                tg.showAlert("Serwer prezentów jeszcze śpi. Spróbuj za chwilę!");
+            }
+        }
+
+        // --- START SPIN ---
         async function startSpin() {
             if (bal < 2) return;
             const btn = document.getElementById('spin-btn');
@@ -219,5 +238,3 @@
     </script>
 </body>
 </html>
-
-
