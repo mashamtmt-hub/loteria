@@ -19,10 +19,34 @@
         .gift-btn { background: #ef4444; box-shadow: 0 0 15px #ef4444; margin-left: 5px; }
         .add-btn:active { transform: scale(0.9); }
 
-        /* MNOŻNIK STAWKI */
-        .multiplier-container { display: flex; gap: 10px; margin-bottom: 20px; }
-        .mult-btn { background: #1e293b; color: white; border: 1px solid var(--gold); padding: 8px 20px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
-        .mult-btn.active { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); transform: scale(1.1); }
+        /* MNOŻNIK STAWKI - WYŚRODKOWANY */
+        .multiplier-container { 
+            display: flex; 
+            justify-content: center; /* Środkowanie w poziomie */
+            align-items: center; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            width: 100%; 
+        }
+        .mult-btn { 
+            background: #1e293b; 
+            color: white; 
+            border: 1px solid var(--gold); 
+            padding: 10px 0; 
+            width: 65px; /* Stała szerokość dla symetrii */
+            border-radius: 12px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            font-size: 1.1rem; 
+            text-align: center;
+        }
+        .mult-btn.active { 
+            background: var(--gold); 
+            color: black; 
+            box-shadow: 0 0 15px var(--gold); 
+            transform: scale(1.1); 
+        }
 
         .wheel-outer { position: relative; width: 350px; height: 350px; margin: 10px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%); box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5); }
         .lights-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
@@ -106,7 +130,6 @@
         const baseCost = 2;
         const uid = tg.initDataUnsafe?.user?.id?.toString() || "8461677673";
 
-        // Inicjalizacja koła
         prizes.forEach((val, i) => {
             const angle = i * 60 + 30;
             const dist = 105;
@@ -120,7 +143,6 @@
             wheel.appendChild(div);
         });
 
-        // Lampki
         const lights = document.getElementById('lights');
         for(let i=0; i<24; i++) {
             const l = document.createElement('div');
@@ -142,21 +164,15 @@
             updateUI();
         }
 
-        // --- MNOŻNIK ---
         function setMultiplier(m) {
             currentMultiplier = m;
-            
-            // Stylizacja przycisków
             document.querySelectorAll('.mult-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`m${m}`).classList.add('active');
-
-            // Aktualizacja napisów na kole
             const labels = document.querySelectorAll('.label');
             prizes.forEach((val, i) => {
                 const multipliedVal = val * currentMultiplier;
                 labels[i].innerText = multipliedVal === 0 ? "0" : `+${multipliedVal}`;
             });
-
             updateUI();
         }
 
@@ -166,7 +182,6 @@
             document.getElementById('spin-btn').disabled = (bal < cost);
         }
 
-        // --- SKLEP / PREZENTY ---
         function toggleShop() {
             const modal = document.getElementById('shop-modal');
             modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
@@ -215,37 +230,28 @@
             }
         }
 
-        // --- START SPIN ---
         async function startSpin() {
             const totalCost = baseCost * currentMultiplier;
             if (bal < totalCost) return;
-
             const btn = document.getElementById('spin-btn');
             btn.disabled = true;
             document.getElementById('status').innerText = "POWODZENIA!";
-
             spinSound.currentTime = 0; spinSound.play();
-
             const winIdx = Math.floor(Math.random() * prizes.length);
-            const winVal = prizes[winIdx] * currentMultiplier; // Mnożymy wygraną!
-
-            bal -= totalCost; // Koszt pomnożony
+            const winVal = prizes[winIdx] * currentMultiplier;
+            bal -= totalCost;
             await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
             document.getElementById('balance').innerText = bal;
-
             const extraSpins = 7200; 
             const targetOffset = (360 - (winIdx * 60 + 30));
             const resetToFullCircle = 360 - (currentRotation % 360);
             currentRotation += extraSpins + resetToFullCircle + targetOffset;
-
             wheel.style.transform = `rotate(${currentRotation}deg)`;
-
             setTimeout(async () => {
                 spinSound.pause();
                 bal += winVal;
                 await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
                 document.getElementById('balance').innerText = bal;
-
                 if (winVal > 0) {
                     winSound.currentTime = 0; winSound.play();
                     document.getElementById('status').innerText = `WYGRANA: +${winVal} 💎`;
