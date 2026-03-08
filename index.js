@@ -58,23 +58,21 @@ app.post("/claim-gift", async (req, res) => {
   }
 });
 
-// --- 3. LOGIKA BOTA: /START + SYSTEM POLECEŃ + GRAFIKA ---
+// --- 3. LOGIKA BOTA: /START (BEZ ZDJĘCIA) ---
 bot.start(async (ctx) => {
   const userId = ctx.from.id.toString();
   const userName = ctx.from.first_name || "Gracz";
-  const startPayload = ctx.startPayload; // To jest ID osoby, która nas zaprosiła
+  const startPayload = ctx.startPayload;
 
   try {
     let { data: profile } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
 
     if (!profile) {
-      // NOWY GRACZ
       let initialBalance = 10;
       let referredBy = null;
 
       if (startPayload && startPayload !== userId) {
         referredBy = startPayload;
-        // Nagroda dla zapraszającego (10 diamentów)
         const { data: referrer } = await supabase.from("profiles").select("balance").eq("user_id", referredBy).single();
         if (referrer) {
           await supabase.from("profiles").update({ balance: referrer.balance + 10 }).eq("user_id", referredBy);
@@ -85,17 +83,17 @@ bot.start(async (ctx) => {
       await supabase.from("profiles").insert([{ user_id: userId, balance: initialBalance, referred_by: referredBy }]);
     }
 
-    // LINK DO TWOJEJ GRAFIKI POWITALNEJ (zmień URL na swój)
-    const welcomePhoto = 'https://raw.githubusercontent.com/mashamtmt-hub/loteria/main/welcome.jpg';
-
-    await ctx.replyWithPhoto(welcomePhoto, {
-      caption: `🎰 Witaj ${userName}!\n\nZasada: 1 Stars ⭐️ = 1 Diament 💎.\n\nTwoje reflinki (10 💎 za znajomego):\nhttps://t.me/${ctx.botInfo.username}?start=${userId}`,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🎮 ZAGRAJ TERAZ", web_app: { url: "https://mashamtmt-hub.github.io/loteria/" } }],
-        ],
-      },
-    });
+    // Zamiast ctx.replyWithPhoto, używamy teraz zwykłego ctx.reply
+    await ctx.reply(
+      `🎰 Witaj ${userName} w Diamond Casino!\n\nZasada: 1 Stars ⭐️ = 1 Diament 💎.\n\nTwoje reflinki (10 💎 za znajomego):\nhttps://t.me/${ctx.botInfo.username}?start=${userId}`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🎮 ZAGRAJ TERAZ", web_app: { url: "https://mashamtmt-hub.github.io/loteria/" } }],
+          ],
+        },
+      }
+    );
   } catch (err) {
     console.error("Błąd startu:", err);
   }
