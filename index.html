@@ -10,8 +10,8 @@
         :root { --gold: #ffd700; --gold-dark: #8b6508; --dark: #070a0f; }
         body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; }
         
-        /* SALDO I PRZYCISKI */
-        .balance-container { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        /* SALDO I PRZYCISKI GÓRNE */
+        .balance-container { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
         .balance-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--gold); padding: 10px 30px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }
         #balance { font-size: 2.2rem; font-weight: 900; color: var(--gold); }
         
@@ -19,19 +19,24 @@
         .gift-btn { background: #ef4444; box-shadow: 0 0 15px #ef4444; margin-left: 5px; }
         .add-btn:active { transform: scale(0.9); }
 
-        .wheel-outer { position: relative; width: 350px; height: 350px; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%); box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5); }
+        /* MNOŻNIK STAWKI */
+        .multiplier-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mult-btn { background: #1e293b; color: white; border: 1px solid var(--gold); padding: 8px 20px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
+        .mult-btn.active { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); transform: scale(1.1); }
+
+        .wheel-outer { position: relative; width: 350px; height: 350px; margin: 10px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 40%, #ffd700 100%); box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.5); }
         .lights-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
         .light { position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; top: 5px; left: calc(50% - 5px); transform-origin: 50% 170px; box-shadow: 0 0 12px white; animation: blink 0.8s infinite; }
         #wheel { width: 314px; height: 314px; border-radius: 50%; border: 6px solid #000; background: conic-gradient(#10b981 0deg 60deg, #0ea5e9 60deg 120deg, #6366f1 120deg 180deg, #d946ef 180deg 240deg, #ef4444 240deg 300deg, #fbbf24 300deg 360deg); transition: transform 5s cubic-bezier(0.15, 0, 0.1, 1); position: relative; overflow: hidden; }
-        .label { position: absolute; width: 80px; height: 40px; top: 50%; left: 50%; margin-top: -20px; margin-left: -40px; pointer-events: none; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 2.2rem; text-shadow: 3px 3px 10px rgba(0,0,0,1); }
+        .label { position: absolute; width: 90px; height: 40px; top: 50%; left: 50%; margin-top: -20px; margin-left: -45px; pointer-events: none; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 2rem; text-shadow: 3px 3px 10px rgba(0,0,0,1); transition: 0.3s; }
         .arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent; border-top: 45px solid #ffffff; z-index: 100; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
         .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 65px; height: 65px; background: radial-gradient(circle, #333, #000); z-index: 50; border: 4px solid var(--gold); border-radius: 50%; box-shadow: 0 0 20px black; display: flex; align-items: center; justify-content: center; }
         
-        button#spin-btn { background: linear-gradient(180deg, var(--gold), #b8860b); color: black; border: none; padding: 22px; border-radius: 25px; font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer; transition: 0.2s; margin-top: 25px; text-transform: uppercase; box-shadow: 0 8px 0 #785a06; }
+        button#spin-btn { background: linear-gradient(180deg, var(--gold), #b8860b); color: black; border: none; padding: 22px; border-radius: 25px; font-weight: 900; width: 100%; font-size: 1.4rem; cursor: pointer; transition: 0.2s; margin-top: 15px; text-transform: uppercase; box-shadow: 0 8px 0 #785a06; }
         button#spin-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #785a06; }
         button#spin-btn:disabled { background: #333; color: #555; box-shadow: none; transform: translateY(8px); }
         
-        #status { font-weight: 900; margin: 20px 0; color: var(--gold); font-size: 1.5rem; text-transform: uppercase; }
+        #status { font-weight: 900; margin: 15px 0; color: var(--gold); font-size: 1.5rem; text-transform: uppercase; }
 
         /* MODAL SKLEPU */
         #shop-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
@@ -53,12 +58,19 @@
             <button class="add-btn gift-btn" onclick="claimGift()">🎁</button>
         </div>
 
+        <div class="multiplier-container">
+            <button class="mult-btn active" id="m1" onclick="setMultiplier(1)">x1</button>
+            <button class="mult-btn" id="m5" onclick="setMultiplier(5)">x5</button>
+            <button class="mult-btn" id="m10" onclick="setMultiplier(10)">x10</button>
+        </div>
+
         <div class="wheel-outer">
             <div class="arrow"></div>
             <div class="lights-container" id="lights"></div>
             <div class="wheel-center">💎</div>
             <div id="wheel"></div>
         </div>
+        
         <div id="status">ZAKRĘĆ ZA 2 💎</div>
         <button id="spin-btn" onclick="startSpin()" disabled>START!</button>
     </div>
@@ -66,31 +78,15 @@
     <div id="shop-modal">
         <div class="shop-container">
             <h2 style="color: var(--gold); margin-top: 0;">SKLEP 💎</h2>
-            <p style="font-size: 0.9rem; margin-bottom: 20px;">1 Gwiazdka (⭐️) = 1 Diament (💎)</p>
-            
-            <div class="shop-item">
-                <span>50 💎</span>
-                <button class="buy-btn" onclick="buyDiamonds(50)">50 ⭐️</button>
-            </div>
-            <div class="shop-item">
-                <span>100 💎</span>
-                <button class="buy-btn" onclick="buyDiamonds(100)">100 ⭐️</button>
-            </div>
-            <div class="shop-item">
-                <span>250 💎</span>
-                <button class="buy-btn" onclick="buyDiamonds(250)">250 ⭐️</button>
-            </div>
-            <div class="shop-item" style="border-color: var(--gold);">
-                <span>1000 💎</span>
-                <button class="buy-btn" onclick="buyDiamonds(1000)">1000 ⭐️</button>
-            </div>
-
+            <div class="shop-item"><span>50 💎</span><button class="buy-btn" onclick="buyDiamonds(50)">50 ⭐️</button></div>
+            <div class="shop-item"><span>100 💎</span><button class="buy-btn" onclick="buyDiamonds(100)">100 ⭐️</button></div>
+            <div class="shop-item"><span>250 💎</span><button class="buy-btn" onclick="buyDiamonds(250)">250 ⭐️</button></div>
+            <div class="shop-item" style="border-color: var(--gold);"><span>1000 💎</span><button class="buy-btn" onclick="buyDiamonds(1000)">1000 ⭐️</button></div>
             <div class="close-shop" onclick="toggleShop()">[ ZAMKNIJ ]</div>
         </div>
     </div>
 
     <script>
-        // --- KONFIGURACJA ---
         const RENDER_URL = "https://loteria-bot-9xwr.onrender.com";
         const S_URL = "https://qbcqqukdhjsavkzvgcfx.supabase.co";
         const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFiY3FxdWtkaGpzYXZrenZnY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzY2NzMsImV4cCI6MjA4ODQ1MjY3M30.a5_02lYV09HNcAWJF_btRmFR0323EArMcTrT29lL9D8";
@@ -106,6 +102,8 @@
         const wheel = document.getElementById('wheel');
         let currentRotation = 0;
         let bal = 0;
+        let currentMultiplier = 1;
+        const baseCost = 2;
         const uid = tg.initDataUnsafe?.user?.id?.toString() || "8461677673";
 
         // Inicjalizacja koła
@@ -141,17 +139,41 @@
             }
             bal = data.balance || 0;
             document.getElementById('balance').innerText = bal;
-            document.getElementById('spin-btn').disabled = (bal < 2);
+            updateUI();
         }
 
+        // --- MNOŻNIK ---
+        function setMultiplier(m) {
+            currentMultiplier = m;
+            
+            // Stylizacja przycisków
+            document.querySelectorAll('.mult-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`m${m}`).classList.add('active');
+
+            // Aktualizacja napisów na kole
+            const labels = document.querySelectorAll('.label');
+            prizes.forEach((val, i) => {
+                const multipliedVal = val * currentMultiplier;
+                labels[i].innerText = multipliedVal === 0 ? "0" : `+${multipliedVal}`;
+            });
+
+            updateUI();
+        }
+
+        function updateUI() {
+            const cost = baseCost * currentMultiplier;
+            document.getElementById('status').innerText = `ZAKRĘĆ ZA ${cost} 💎`;
+            document.getElementById('spin-btn').disabled = (bal < cost);
+        }
+
+        // --- SKLEP / PREZENTY ---
         function toggleShop() {
             const modal = document.getElementById('shop-modal');
             modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // --- SKLEP / PŁATNOŚCI ---
         async function buyDiamonds(amount) {
-            tg.showScanQrPopup({ text: "Budzenie kasjera... (może to zająć 30s)" });
+            tg.showScanQrPopup({ text: "Łączenie z kasjerem..." });
             try {
                 const response = await fetch(`${RENDER_URL}/create-stars-invoice`, {
                     method: 'POST',
@@ -163,18 +185,17 @@
                 if (data.link) {
                     tg.openInvoice(data.link, (status) => {
                         if (status === 'paid') {
-                            tg.showAlert("💎 Diamenty zostały dodane!");
-                            setTimeout(init, 2000);
+                            tg.showAlert("💎 Zakup udany!");
+                            setTimeout(init, 1500);
                         }
                     });
                 }
             } catch (e) {
                 tg.closeScanQrPopup();
-                tg.showAlert("Spróbuj ponownie za chwilę (serwer wstaje).");
+                tg.showAlert("Serwer zajęty, spróbuj ponownie.");
             }
         }
 
-        // --- DARMOWY PREZENT ---
         async function claimGift() {
             try {
                 const response = await fetch(`${RENDER_URL}/claim-gift`, {
@@ -184,19 +205,21 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    tg.showAlert(`🎁 ODEBRANO!\nOtrzymałeś 5 darmowych diamentów.`);
+                    tg.showAlert(`🎁 ODEBRANO +5 💎!`);
                     setTimeout(init, 500);
                 } else {
                     tg.showAlert(data.message);
                 }
             } catch (e) {
-                tg.showAlert("Serwer prezentów jeszcze śpi. Spróbuj za chwilę!");
+                tg.showAlert("Spróbuj później.");
             }
         }
 
         // --- START SPIN ---
         async function startSpin() {
-            if (bal < 2) return;
+            const totalCost = baseCost * currentMultiplier;
+            if (bal < totalCost) return;
+
             const btn = document.getElementById('spin-btn');
             btn.disabled = true;
             document.getElementById('status').innerText = "POWODZENIA!";
@@ -204,9 +227,9 @@
             spinSound.currentTime = 0; spinSound.play();
 
             const winIdx = Math.floor(Math.random() * prizes.length);
-            const winVal = prizes[winIdx];
+            const winVal = prizes[winIdx] * currentMultiplier; // Mnożymy wygraną!
 
-            bal -= 2;
+            bal -= totalCost; // Koszt pomnożony
             await sb.from('profiles').update({ balance: bal }).eq('user_id', uid);
             document.getElementById('balance').innerText = bal;
 
@@ -230,7 +253,7 @@
                     lossSound.currentTime = 0; lossSound.play();
                     document.getElementById('status').innerText = "BRAK WYGRANEJ!";
                 }
-                btn.disabled = (bal < 2);
+                updateUI();
             }, 5100);
         }
 
