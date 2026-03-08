@@ -13,19 +13,18 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// --- 1. ENDPOINT DLA TWOJEGO KOŁA FORTUNY ---
+// --- 1. ENDPOINT: PŁATNOŚCI STARS ---
 app.post("/create-stars-invoice", async (req, res) => {
   const { userId, amount } = req.body;
   console.log(`📥 Otrzymano prośbę o fakturę: User ${userId}, Ilość: ${amount}`);
 
   try {
-    // KLUCZOWA ZMIANA: Przekazujemy jeden obiekt {} zamiast wielu argumentów
     const link = await bot.telegram.createInvoiceLink({
       title: `Pakiet ${amount} Diamentów`,
       description: `Doładowanie salda 1:1 w Diamond Casino`,
       payload: `user_${userId}_pay_${Date.now()}`,
-      provider_token: "", // Puste dla Stars
-      currency: "XTR",    // Waluta Stars
+      provider_token: "", 
+      currency: "XTR",    
       prices: [{ label: "Diamenty", amount: parseInt(amount) }]
     });
     
@@ -37,7 +36,41 @@ app.post("/create-stars-invoice", async (req, res) => {
   }
 });
 
-// --- 2. LOGIKA PRZYCISKU /START ---
+// --- 2. ENDPOINT: DARMOWY PREZENT (CO 24H) ---
+app.post("/claim-gift", async (req, res) => {
+  const { userId } = req.body;
+  console.log(`🎁 Próba odebrania prezentu: User ${userId}`);
+
+  try {
+    let { data: profile } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+
+    if (!profile) return res.status(404).json({ error: "Brak profilu" });
+
+    const now = new Date();
+    const lastGift = profile.last_gift_at ? new Date(profile.last_gift_at) : new Date(0);
+    const diff = now - lastGift;
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    if (diff >= twentyFourHours) {
+      const newBalance = (profile.balance || 0) + 5;
+      await supabase.from('profiles')
+        .update({ balance: newBalance, last_gift_at: now.toISOString() })
+        .eq('user_id', userId);
+        
+      res.json({ success: true, newBalance: newBalance });
+    } else {
+      const remaining = twentyFourHours - diff;
+      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      res.json({ success: false, message: `Prezent dostępny za: ${hours}h ${minutes}m` });
+    }
+  } catch (e) {
+    console.error("❌ Błąd prezentu:", e);
+    res.status(500).json({ error: "Błąd serwera" });
+  }
+});
+
+// --- 3. LOGIKA BOTA: /START ---
 bot.start(async (ctx) => {
   const userId = ctx.from.id.toString();
   const userName = ctx.from.first_name || "Gracz";
@@ -70,7 +103,7 @@ bot.start(async (ctx) => {
   }
 });
 
-// --- 3. OBSŁUGA PŁATNOŚCI ---
+// --- 4. OBSŁUGA PŁATNOŚCI STARS ---
 bot.on("pre_checkout_query", (ctx) => ctx.answerPreCheckoutQuery(true));
 
 bot.on("successful_payment", async (ctx) => {
@@ -79,11 +112,7 @@ bot.on("successful_payment", async (ctx) => {
   console.log(`💰 Udana wpłata: ${amount} Stars od użytkownika ${userId}`);
 
   try {
-    let { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    let { data: profile } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
 
     if (profile) {
       const newBalance = (profile.balance || 0) + amount;
@@ -95,7 +124,8 @@ bot.on("successful_payment", async (ctx) => {
   }
 });
 
-app.get("/", (req, res) => res.send("Serwer bota Stars działa! 🚀"));
+// --- 5. SERWER HTTP I START ---
+app.get("/", (req, res) => res.send("Serwer Diamond Casino działa! 🚀"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serwer HTTP na porcie ${PORT}`));
